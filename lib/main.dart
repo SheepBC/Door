@@ -17,6 +17,14 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
+  Size size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
+  print(size.width);
+
+  if(Platform.isAndroid){
+    if(size.width <650) SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  }
+
+
   runApp(
     MultiProvider(
       providers: [
@@ -45,25 +53,26 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    Future.delayed(Duration.zero, () {
-      if(MediaQuery.of(context).size.width <650) SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    });
   }
+
 
   @override
   Widget build(BuildContext context) {
+
+    var goRoute = GoRouter(
+
+      initialLocation: "/main",
+      routes: [
+        GoRoute(path: "/main",builder: (context,state) => MainPage()),
+        GoRoute(path: "/test",builder: (context,state) => TestPage()),
+      ],
+    );
 
     return Consumer<Theme_Setting>(
         builder: (context,themem_setting,widget) {
           return MaterialApp.router(
             //페이지 이동
-            routerConfig: GoRouter(
-              initialLocation: "/main",
-              routes: [
-                GoRoute(path: "/main",builder: (context,state) => MainPage()),
-                GoRoute(path: "/test",builder: (context,state) => TestPage()),
-              ]
-            ),
+            routerConfig: goRoute,
 
             //테마
             themeMode: themem_setting.getMode,
