@@ -33,6 +33,7 @@ dependencies:
   provider:
   go_router:
   easy_localization:
+  table_calendar:
 
 
 
