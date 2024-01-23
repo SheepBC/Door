@@ -65,6 +65,16 @@ flutter:
 
   assets:
     - assets/translations/
+    - assets/fonts/
+
+  fonts:
+    - family: Nanum_JungHagSaeng
+      fonts:
+        - asset: assets/fonts/Nanum_JungHagSaeng.ttf
+    - family: Dovemayo
+      fonts:
+        - asset: assets/fonts/Dovemayo.otf
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:

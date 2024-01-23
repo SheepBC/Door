@@ -1,3 +1,4 @@
+import 'package:door/Providers/setting.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -11,22 +12,38 @@ class Theme_Setting with ChangeNotifier{
     notifyListeners();
   }
 
-  ThemeData darkMode =
+  String font = "";
+  String get getFont => font;
+
+  font_list _font = font_list.Font_Basic;
+  font_list get get_Font => _font;
+
+  void setFont(font_list font){
+    this.font = font.name;
+    _font = font;
+    if(font == font_list.Font_Basic) this.font ="";
+    notifyListeners();
+  }
+
+  ThemeData darkMode() =>
   ThemeData(
     useMaterial3: true,
     colorSchemeSeed: Colors.amber,
-    brightness: Brightness.dark
+    brightness: Brightness.dark,
+    fontFamily: font,
   );
 
-  ThemeData get getDarkMode => darkMode;
+  ThemeData get getDarkMode => darkMode();
 
-  ThemeData lightMode =
+  ThemeData lightMode() =>
   ThemeData(
     useMaterial3: true,
     colorSchemeSeed: Colors.amber,
-    brightness: Brightness.light
+    brightness: Brightness.light,
+    fontFamily: font,
   );
 
-  ThemeData get getLightMode => lightMode;
+  ThemeData get getLightMode => lightMode();
+
 
 }

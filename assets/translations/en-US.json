@@ -1,6 +1,17 @@
 {
   "dark":"dark",
   "light": "light",
+  "system": "system",
+
   "ko":"korean",
-  "en": "English"
+  "en": "English",
+
+  "Setting": "Setting",
+  "Language": "Language",
+  "Font": "Font",
+  "Theme": "Theme",
+
+  "Dovemayo": "Dovemayo",
+  "Nanum_JungHagSaeng": "Nanum_JungHagSaeng",
+  "Font_Basic": "Basic"
 }

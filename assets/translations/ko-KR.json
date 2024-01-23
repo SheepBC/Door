@@ -1,6 +1,17 @@
 {
   "dark":"어둠",
   "light": "밝음",
+  "system": "시스템",
+
   "ko": "한국어",
-  "en": "영어"
+  "en": "영어",
+
+  "Setting": "설정",
+  "Language": "언어",
+  "Font": "폰트",
+  "Theme": "테마",
+
+  "Dovemayo": "둘기마요",
+  "Nanum_JungHagSaeng": "나눔중학생",
+  "Font_Basic": "기본"
 }

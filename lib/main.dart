@@ -1,7 +1,11 @@
 
 import 'dart:io';
 
+import 'package:door/Pages/Settings/language_settingPage.dart';
+import 'package:door/Pages/Settings/theme_settingPage.dart';
+import 'package:door/Pages/settingPage.dart';
 import 'package:door/Pages/testPage.dart';
+import 'package:door/Providers/setting.dart';
 import 'package:door/Providers/theme_setting.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +15,7 @@ import 'package:provider/provider.dart';
 
 import 'Pages/mainPage.dart';
 import 'Tools/custom_scrollbehavior.dart';
+import 'Pages/Settings/font_settingPage.dart';
 
 void main() async{
 
@@ -28,6 +33,7 @@ void main() async{
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider<Setting>(create: (context) => Setting()),
         ChangeNotifierProvider<Theme_Setting>(create: (context) => Theme_Setting())
       ],
       child: EasyLocalization(
@@ -64,20 +70,25 @@ class _MyAppState extends State<MyApp> {
       initialLocation: "/main",
       routes: [
         GoRoute(path: "/main",builder: (context,state) => MainPage()),
+        GoRoute(path: "/setting",builder: (context,state) => SettingPage()),
+        GoRoute(path: "/langsetting",builder: (context,state) => Language_SettingPage()),
+        GoRoute(path: "/fontsetting",builder: (context,state) => Font_SettingPage()),
+        GoRoute(path: "/themesetting",builder: (context,state) => Theme_SettingPage()),
+
         GoRoute(path: "/test",builder: (context,state) => TestPage()),
       ],
     );
 
-    return Consumer<Theme_Setting>(
-        builder: (context,themem_setting,widget) {
+    return Consumer<Setting>(
+        builder: (context,setting,widget) {
           return MaterialApp.router(
             //페이지 이동
             routerConfig: goRoute,
 
             //테마
-            themeMode: themem_setting.getMode,
-            darkTheme: themem_setting.getDarkMode,
-            theme: themem_setting.getLightMode,
+            themeMode: setting.theme.getMode,
+            darkTheme: setting.theme.getDarkMode,
+            theme: setting.theme.getLightMode,
             //다국화
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
@@ -87,6 +98,7 @@ class _MyAppState extends State<MyApp> {
             scrollBehavior: MouseDragScrollBehavior(),
 
             debugShowCheckedModeBanner: false,
+
           );
         }
     );

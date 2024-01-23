@@ -1,6 +1,7 @@
 
 import 'dart:ffi';
 
+import 'package:door/Providers/setting.dart';
 import 'package:door/Providers/theme_setting.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +58,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<Theme_Setting>(builder: (context,theme_setting,widget) {
+    return Consumer<Setting>(builder: (context,setting,widget) {
       return Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
@@ -66,7 +67,7 @@ class _MainPageState extends State<MainPage> {
           actions: [
             IconButton(
                 onPressed: () {
-                  context.push("/test");
+                  context.push("/setting");
                 },
                 icon: Icon(Icons.settings)
             )
@@ -78,8 +79,23 @@ class _MainPageState extends State<MainPage> {
               RichText(
                 text: TextSpan(
                     children: [
-                      TextSpan(text: "${calender.focusDay.month}",style: TextStyle(fontSize: 50,color: Theme.of(context).textTheme.titleMedium!.color)),
-                      TextSpan(text: "${months[calender.focusDay.month-1]}",style: TextStyle(fontSize: 15,color: Theme.of(context).textTheme.titleMedium!.color, fontWeight: FontWeight.bold))
+                      TextSpan(
+                          text: "${calender.focusDay.month}",
+                          style: TextStyle(
+                              fontSize: 50,
+                              color: Theme.of(context).textTheme.titleMedium!.color,
+                              fontFamily: setting.theme.font
+                          )
+                      ),
+                      TextSpan(
+                          text: "${months[calender.focusDay.month-1]}",
+                          style: TextStyle(
+                              fontSize: 15,
+                              color: Theme.of(context).textTheme.titleMedium!.color,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: setting.theme.font
+                          )
+                      )
                     ]
                 ),
               ),
@@ -150,7 +166,7 @@ class _CalenderState extends State<Calender> {
                 if(day.weekday == DateTime.saturday) color = Colors.blue;
                 return Container(
                   width: 35,
-                  child: Center(child: Text("${day.day}",style: TextStyle(color: color),)),
+                  child: Center(child: Text("${day.day}",style: TextStyle(color: color,fontSize: 24),)),
                 );
               }
           ),
@@ -158,6 +174,12 @@ class _CalenderState extends State<Calender> {
         );;
       },
       onPageChanged: (index){
+
+        var month = index%12;
+        var year = ((index-month)/12).toInt();
+
+        widget.focusDay = DateTime(year,month);
+
         widget.onChange();
       },
 
