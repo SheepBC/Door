@@ -45,5 +45,21 @@ class Theme_Setting with ChangeNotifier{
 
   ThemeData get getLightMode => lightMode();
 
+  double font_size = 1;
+
+  double get getFont_Size => font_size;
+
+  void setFont_Size(double size){
+    font_size = size;
+    notifyListeners();
+  }
+
+  MediaQuery getMediaQuery(BuildContext context,Widget widget){
+    return MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaleFactor: font_size),
+        child: widget
+    );
+  }
+
 
 }

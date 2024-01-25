@@ -33,19 +33,46 @@ class _Font_SettingPageState extends State<Font_SettingPage> {
   @override
   Widget build(BuildContext context) {
 
+
     return Consumer<Setting>(builder: (context,setting,widget) {
 
+      var slider_v = (setting.theme.font_size*10).round()/10;
       var _font = setting.theme.get_Font;
 
       return Scaffold(
         appBar: AppBar(title: Text("Font").tr()),
-        body: ListView(
+        body: Column(
           children: [
-            getTile(font_list.Dovemayo, _font,setting),
-            getTile(font_list.Nanum_JungHagSaeng, _font,setting),
-            getTile(font_list.Font_Basic, _font,setting),
+            Center(
+              child: Container(
+                child: Text("too big to see,\ntoo small to see...").tr(),
+              ),
+            ),
+            Slider(
+                value: slider_v,
+                min: 0,
+                max: 2.5,
+                autofocus: true,
+                divisions: 25,
+                label: slider_v.toString(),
+                onChanged: (value) {
+                  setting.theme.setFont_Size(value);
+                  setting.change();
+                  slider_v = value;
+                  setState(() {
+
+                  });
+                }
+            ),
+            Expanded(child: ListView(
+              children: [
+                getTile(font_list.Dovemayo, _font,setting),
+                getTile(font_list.Nanum_JungHagSaeng, _font,setting),
+                getTile(font_list.Font_Basic, _font,setting),
+              ],
+            ),)
           ],
-        ),
+        )
       );
     }
     );

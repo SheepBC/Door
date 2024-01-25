@@ -37,7 +37,7 @@ class _Theme_SettingPageState extends State<Theme_SettingPage> {
       var _mode = setting.theme.mode;
 
       return Scaffold(
-        appBar: AppBar(title: Text("Theme").tr()),
+        appBar: AppBar(title: Text("Theme",).tr(),),
         body: ListView(
           children: [
             getTile(ThemeMode.system, _mode,setting),

@@ -36,7 +36,7 @@ class _Language_SettingPageState extends State<Language_SettingPage> {
 
       return Scaffold(
         appBar: AppBar(title: Text("Language").tr()),
-        body: ListView(
+        body:  ListView(
           children: [
             getTile(Locale("en","US"), _locale),
             getTile(Locale("ko","KR"), _locale)

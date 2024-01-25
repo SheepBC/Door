@@ -16,7 +16,7 @@ class MainPage extends StatefulWidget {
   @override
   State<MainPage> createState() => _MainPageState();
 }
-//테스트
+
 class _MainPageState extends State<MainPage> {
 
   late Calender calender;
@@ -98,11 +98,20 @@ class _MainPageState extends State<MainPage> {
                       )
                     ]
                 ),
+                textScaleFactor: setting.theme.font_size,
               ),
-              Expanded(child: SizedBox(child: calender,width: getWidth(),)),
+              Expanded(child: Container(child: calender,width: getWidth(),margin: EdgeInsets.all(20),)),
             ],
           ),
         ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+
+          },
+
+        ),
+
+
       );
     });
   }
@@ -161,15 +170,36 @@ class _CalenderState extends State<Calender> {
           ),
           calendarBuilders: CalendarBuilders(
               defaultBuilder: (context,day,_) {
-                var color = Theme.of(context).textTheme.titleSmall!.color;
-                if(day.weekday == DateTime.sunday) color = Colors.red;
-                if(day.weekday == DateTime.saturday) color = Colors.blue;
+
+                var theme = Theme.of(context);
+
+                var color = theme.textTheme.titleSmall!.color;
+                if (day.isAfter(DateTime.now())) color = theme.disabledColor;
+                
+                if(day.weekday == DateTime.sunday) color = Colors.red.withOpacity(color!.opacity);
+                if(day.weekday == DateTime.saturday) color = Colors.blue.withOpacity(color!.opacity);
+
                 return Container(
-                  width: 35,
+                  width: 37,
                   child: Center(child: Text("${day.day}",style: TextStyle(color: color,fontSize: 24),)),
                 );
-              }
+              },
+            todayBuilder: (context,day,_) {
+              var color = Theme.of(context).textTheme.titleSmall!.color;
+              if(day.weekday == DateTime.sunday) color = Colors.red;
+              if(day.weekday == DateTime.saturday) color = Colors.blue;
+              return Container(
+                width: 37,
+                child: Center(child: Text("${day.day}", style: TextStyle(color: color,fontSize: 24),),),
+                decoration: BoxDecoration(shape: BoxShape.circle,color: Theme.of(context).highlightColor),
+
+              );
+            }
           ),
+
+          onDaySelected: (day,_) {
+            print("d");
+          },
 
         );;
       },

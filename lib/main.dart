@@ -89,6 +89,7 @@ class _MyAppState extends State<MyApp> {
             themeMode: setting.theme.getMode,
             darkTheme: setting.theme.getDarkMode,
             theme: setting.theme.getLightMode,
+            builder: (context,widget) => setting.theme.getMediaQuery(context, widget!),
             //다국화
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
