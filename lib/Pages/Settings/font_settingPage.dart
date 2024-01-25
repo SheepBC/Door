@@ -21,7 +21,7 @@ class _Font_SettingPageState extends State<Font_SettingPage> {
       onChanged: (value){
         setting.theme.setFont(font);
         setting.change();
-        print(setting.theme.getLightMode.textTheme.titleSmall!.fontFamily);
+        //print(setting.theme.getLightMode.textTheme.titleSmall!.fontFamily);
         setState(() {
 
         });

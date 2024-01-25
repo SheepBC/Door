@@ -23,7 +23,7 @@ void main() async{
   await EasyLocalization.ensureInitialized();
 
   Size size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
-  print(size.width);
+  //print(size.width);
 
   if(Platform.isAndroid){
     if(size.width <650) SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
