@@ -104,13 +104,24 @@ class _MainPageState extends State<MainPage> {
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-
+        floatingActionButton: InkWell(
+          child: Container(
+            width: 50,
+            height: 50,
+            child: Icon(Icons.add),
+            decoration: BoxDecoration(
+                color: Theme.of(context).splashColor,
+                borderRadius: BorderRadius.all(Radius.circular(5))
+            ),
+          ),
+          onTap: () {
+            print("tap");
           },
-
+          onLongPress: (){
+            print("long");
+          },
         ),
-
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
 
       );
     });
