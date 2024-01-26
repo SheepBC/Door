@@ -21,6 +21,7 @@ class _Theme_SettingPageState extends State<Theme_SettingPage> {
       onChanged: (value){
         setting.theme.setMode(value!);
         setting.change();
+        setting.save(setting);
         setState(() {
 
         });

@@ -1,4 +1,5 @@
 
+import 'dart:convert';
 import 'dart:ffi';
 
 import 'package:door/Providers/setting.dart';
@@ -111,15 +112,16 @@ class _MainPageState extends State<MainPage> {
             child: Icon(Icons.add),
             decoration: BoxDecoration(
                 color: Theme.of(context).splashColor,
-                borderRadius: BorderRadius.all(Radius.circular(5))
+                borderRadius: BorderRadius.all(Radius.circular(7.5))
             ),
           ),
           onTap: () {
-            print("tap");
+
           },
-          onLongPress: (){
-            print("long");
+          onLongPress: () async{
+
           },
+          borderRadius: BorderRadius.all(Radius.circular(7.5)),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
 
@@ -191,7 +193,7 @@ class _CalenderState extends State<Calender> {
                 if(day.weekday == DateTime.saturday) color = Colors.blue.withOpacity(color!.opacity);
 
                 return Container(
-                  width: 37,
+                  width: 40,
                   child: Center(child: Text("${day.day}",style: TextStyle(color: color,fontSize: 24),)),
                 );
               },
@@ -200,19 +202,22 @@ class _CalenderState extends State<Calender> {
               if(day.weekday == DateTime.sunday) color = Colors.red;
               if(day.weekday == DateTime.saturday) color = Colors.blue;
               return Container(
-                width: 37,
+                width: 40,
                 child: Center(child: Text("${day.day}", style: TextStyle(color: color,fontSize: 24),),),
                 decoration: BoxDecoration(shape: BoxShape.circle,color: Theme.of(context).highlightColor),
-
               );
-            }
+            },
           ),
 
           onDaySelected: (day,_) {
-            print("d");
+            print(day);
           },
 
-        );;
+          onDayLongPressed: (day,_) {
+            print("Long");
+          },
+
+        );
       },
       onPageChanged: (index){
 
@@ -223,6 +228,8 @@ class _CalenderState extends State<Calender> {
 
         widget.onChange();
       },
+
+      
 
     );
   }

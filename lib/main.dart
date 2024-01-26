@@ -29,12 +29,13 @@ void main() async{
     if(size.width <650) SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
+  var setting = Setting();
+  setting.load();
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<Setting>(create: (context) => Setting()),
-        ChangeNotifierProvider<Theme_Setting>(create: (context) => Theme_Setting())
+        ChangeNotifierProvider<Setting>(create: (context) => setting),
       ],
       child: EasyLocalization(
         supportedLocales: [Locale("en","US"),Locale("ko","KR")],

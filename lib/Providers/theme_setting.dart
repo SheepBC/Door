@@ -4,6 +4,26 @@ import 'package:flutter/material.dart';
 
 class Theme_Setting with ChangeNotifier{
 
+  Theme_Setting(){
+
+  }
+
+  Theme_Setting.fromJson(Map<String, dynamic> json){
+    mode = ThemeMode.values.firstWhere((element) => element.name == json["mode"],orElse: () => ThemeMode.light);
+    setFont(font_list.values.firstWhere((element) => element.name == json["font"],orElse: () => font_list.Font_Basic));
+    font_size = double.parse(json["font_size"].toString());
+  }
+
+  Map<String, dynamic> toJson(){
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data["mode"] = mode.name;
+    data["font"] = _font.name;
+    data["font_size"] = font_size;
+
+    return data;
+  }
+
+
   ThemeMode mode = ThemeMode.light;
   ThemeMode get getMode => mode;
 
