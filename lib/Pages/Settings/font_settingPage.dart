@@ -59,6 +59,7 @@ class _Font_SettingPageState extends State<Font_SettingPage> {
                 onChanged: (value) {
                   setting.theme.setFont_Size(value);
                   setting.change();
+                  setting.save(setting);
                   slider_v = value;
                   setState(() {
 

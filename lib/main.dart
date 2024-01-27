@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:door/Pages/Settings/language_settingPage.dart';
 import 'package:door/Pages/Settings/theme_settingPage.dart';
+import 'package:door/Pages/diaryPage.dart';
 import 'package:door/Pages/settingPage.dart';
 import 'package:door/Pages/testPage.dart';
 import 'package:door/Providers/setting.dart';
@@ -75,6 +76,10 @@ class _MyAppState extends State<MyApp> {
         GoRoute(path: "/langsetting",builder: (context,state) => Language_SettingPage()),
         GoRoute(path: "/fontsetting",builder: (context,state) => Font_SettingPage()),
         GoRoute(path: "/themesetting",builder: (context,state) => Theme_SettingPage()),
+        GoRoute(path: "/diary",builder: (context,state) {
+          DateTime day = DateTime.parse(state.extra.toString());
+          return DiaryPage(day: day);
+        }),
 
         GoRoute(path: "/test",builder: (context,state) => TestPage()),
       ],

@@ -1,12 +1,15 @@
 
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:io';
 
 import 'package:door/Providers/setting.dart';
 import 'package:door/Providers/theme_setting.dart';
+import 'package:door/Tools/file_tool.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:door/Tools/custom_scrollbehavior.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -119,6 +122,8 @@ class _MainPageState extends State<MainPage> {
 
           },
           onLongPress: () async{
+            var doc = await getApplicationDocumentsDirectory();
+            print(doc.listSync());
 
           },
           borderRadius: BorderRadius.all(Radius.circular(7.5)),
@@ -192,25 +197,30 @@ class _CalenderState extends State<Calender> {
                 if(day.weekday == DateTime.sunday) color = Colors.red.withOpacity(color!.opacity);
                 if(day.weekday == DateTime.saturday) color = Colors.blue.withOpacity(color!.opacity);
 
+                var isNanum = Theme.of(context).textTheme.titleMedium!.fontFamily == font_list.Nanum_JungHagSaeng.name;
+
                 return Container(
                   width: 40,
-                  child: Center(child: Text("${day.day}",style: TextStyle(color: color,fontSize: 24),)),
+                  child: Center(child: Text("${day.day}",style: TextStyle(color: color,fontSize: 24),textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: !isNanum))),
                 );
               },
             todayBuilder: (context,day,_) {
               var color = Theme.of(context).textTheme.titleSmall!.color;
               if(day.weekday == DateTime.sunday) color = Colors.red;
               if(day.weekday == DateTime.saturday) color = Colors.blue;
+
+              var isNanum = Theme.of(context).textTheme.titleMedium!.fontFamily == font_list.Nanum_JungHagSaeng.name;
+
               return Container(
                 width: 40,
-                child: Center(child: Text("${day.day}", style: TextStyle(color: color,fontSize: 24),),),
+                child: Center(child: Text("${day.day}", style: TextStyle(color: color,fontSize: 24,),textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: !isNanum),),),
                 decoration: BoxDecoration(shape: BoxShape.circle,color: Theme.of(context).highlightColor),
               );
             },
           ),
 
           onDaySelected: (day,_) {
-            print(day);
+            context.push("/diary",extra: day);
           },
 
           onDayLongPressed: (day,_) {

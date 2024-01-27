@@ -38,7 +38,7 @@ class Setting with ChangeNotifier{
   }
 
   void save(Setting setting) async{
-    var Dir = await getApplicationCacheDirectory();
+    var Dir = await getApplicationSupportDirectory();
     var path = Dir.path+"/Setting.json";
     
     var file_tool = File_Tool();
@@ -49,15 +49,17 @@ class Setting with ChangeNotifier{
   }
   
   void load() async{
-    var Dir = await getApplicationCacheDirectory();
+    var Dir = await getApplicationSupportDirectory();
     var path = Dir.path+"/Setting.json";
 
     var file_tool = File_Tool();
     
     var text = await file_tool.loadFile(path);
-    var json = jsonDecode(text);
+    if(text != ""){
+      var json = jsonDecode(text);
 
-    fromJson(json);
+      fromJson(json);
+    }
   }
 
 }
