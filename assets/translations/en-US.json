@@ -16,5 +16,6 @@
   "Font_Basic": "Basic",
   "too big to see,\ntoo small to see...": "too big to see,\ntoo small to see...",
 
-  "Diary": "Diary"
+  "Diary": "Diary",
+  "Date Format": "EEEE MMMM dd.yyyy"
 }

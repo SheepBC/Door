@@ -49,22 +49,33 @@ class _Font_SettingPageState extends State<Font_SettingPage> {
                 child: Text("too big to see,\ntoo small to see...").tr(),
               ),
             ),
-            Slider(
-                value: slider_v,
-                min: 0,
-                max: 2.5,
-                autofocus: true,
-                divisions: 25,
-                label: slider_v.toString(),
-                onChanged: (value) {
-                  setting.theme.setFont_Size(value);
-                  setting.change();
-                  setting.save(setting);
-                  slider_v = value;
-                  setState(() {
+            Card(
+              shape: BeveledRectangleBorder(
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 0.3
+                ),
+              ),
+              child: Container(
+                child: Slider(
+                    value: slider_v,
+                    min: 0,
+                    max: 2.5,
+                    autofocus: true,
+                    divisions: 25,
+                    label: slider_v.toString(),
+                    onChanged: (value) {
+                      setting.theme.setFont_Size(value);
+                      setting.change();
+                      setting.save(setting);
+                      slider_v = value;
+                      setState(() {
 
-                  });
-                }
+                      });
+                    }
+                ),
+                color: Theme.of(context).colorScheme.background,
+              ),
             ),
             Expanded(child: ListView(
               children: [

@@ -1,6 +1,7 @@
 
 import 'dart:io';
 
+import 'package:door/Diary_Tool/diary_data.dart';
 import 'package:door/Pages/Settings/language_settingPage.dart';
 import 'package:door/Pages/Settings/theme_settingPage.dart';
 import 'package:door/Pages/diaryPage.dart';
@@ -78,7 +79,8 @@ class _MyAppState extends State<MyApp> {
         GoRoute(path: "/themesetting",builder: (context,state) => Theme_SettingPage()),
         GoRoute(path: "/diary",builder: (context,state) {
           DateTime day = DateTime.parse(state.extra.toString());
-          return DiaryPage(day: day);
+          Diary_Data diary = Diary_Data(day);
+          return DiaryPage(Diary: diary);
         }),
 
         GoRoute(path: "/test",builder: (context,state) => TestPage()),
