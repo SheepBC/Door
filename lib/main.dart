@@ -80,7 +80,7 @@ class _MyAppState extends State<MyApp> {
         GoRoute(path: "/diary",builder: (context,state) {
           DateTime day = DateTime.parse(state.extra.toString());
           Diary_Data diary = Diary_Data(day);
-          return DiaryPage(Diary: diary);
+          return DiaryPage(diary: diary);
         }),
 
         GoRoute(path: "/test",builder: (context,state) => TestPage()),

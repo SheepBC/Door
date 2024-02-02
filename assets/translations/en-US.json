@@ -17,5 +17,8 @@
   "too big to see,\ntoo small to see...": "too big to see,\ntoo small to see...",
 
   "Diary": "Diary",
-  "Date Format": "EEEE MMMM dd.yyyy"
+  "Date Format": "EEEE MMMM dd.yyyy",
+  "Placeholder": "Today is my first day on the moon.",
+  "bold":"Bold",
+  "Edit": "Edit"
 }

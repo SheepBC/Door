@@ -17,5 +17,8 @@
   "too big to see,\ntoo small to see...": "너무 커도 안보이고,\n너무 작아도 안보이고...",
 
   "Diary": "일기",
-  "Date Format": "yyyy.MM.dd EEEE"
+  "Date Format": "yyyy.MM.dd EEEE",
+  "Placeholder": "오늘은 달에서 지내는 첫날이다.",
+  "bold": "굵게",
+  "Edit": "편집"
 }

@@ -80,34 +80,42 @@ class _MainPageState extends State<MainPage> {
         body: Center(
           child: Column(
             children: [
-              RichText(
-                text: TextSpan(
-                    children: [
-                      TextSpan(
-                          text: "${calender.focusDay.month}",
-                          style: TextStyle(
-                              fontSize: 50,
-                              color: Theme.of(context).textTheme.titleMedium!.color,
-                              fontFamily: setting.theme.font
-                          )
-                      ),
-                      TextSpan(
-                          text: "${months[calender.focusDay.month-1]}",
-                          style: TextStyle(
-                              fontSize: 15,
-                              color: Theme.of(context).textTheme.titleMedium!.color,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: setting.theme.font
-                          )
-                      )
-                    ]
+              Container(
+                padding: EdgeInsets.only(top: 20),
+                child: RichText(
+                  text: TextSpan(
+                      children: [
+                        TextSpan(
+                            text: "${calender.focusDay.month}",
+                            style: TextStyle(
+                                fontSize: 52.5,
+                                color: Theme.of(context).textTheme.titleMedium!.color,
+                                fontFamily: setting.theme.font
+                            )
+                        ),
+                        TextSpan(
+                            text: "${months[calender.focusDay.month-1]}",
+                            style: TextStyle(
+                                fontSize: 15,
+                                color: Theme.of(context).textTheme.titleMedium!.color,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: setting.theme.font
+                            )
+                        )
+                      ]
+                  ),
+                  textScaleFactor: setting.theme.font_size,
                 ),
-                textScaleFactor: setting.theme.font_size,
               ),
               Expanded(child: Container(child: calender,width: getWidth(),margin: EdgeInsets.all(20),)),
             ],
           ),
         ),
+
+        bottomNavigationBar: SizedBox(
+          height: 25,
+        ),
+
         floatingActionButton: InkWell(
           child: Container(
             width: 50,
@@ -201,7 +209,7 @@ class _CalenderState extends State<Calender> {
 
                 return Container(
                   width: 40,
-                  child: Center(child: Text("${day.day}",style: TextStyle(color: color,fontSize: 24),textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: !isNanum))),
+                  child: Center(child: Text("${day.day}",style: TextStyle(color: color,fontSize: 20),textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: !isNanum))),
                 );
               },
             todayBuilder: (context,day,_) {
@@ -213,14 +221,14 @@ class _CalenderState extends State<Calender> {
 
               return Container(
                 width: 40,
-                child: Center(child: Text("${day.day}", style: TextStyle(color: color,fontSize: 24,),textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: !isNanum),),),
+                child: Center(child: Text("${day.day}", style: TextStyle(color: color,fontSize: 20,),textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: !isNanum),),),
                 decoration: BoxDecoration(shape: BoxShape.circle,color: Theme.of(context).highlightColor),
               );
             },
           ),
 
           onDaySelected: (day,_) {
-            context.push("/diary",extra: day);
+            if(day.isBefore(DateTime.now())) context.push("/diary",extra: day);
           },
 
           onDayLongPressed: (day,_) {

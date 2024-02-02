@@ -68,6 +68,7 @@ flutter:
   assets:
     - assets/translations/
     - assets/fonts/
+    - assets/Emojis/
 
   fonts:
     - family: Nanum_JungHagSaeng
