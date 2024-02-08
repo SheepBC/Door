@@ -36,6 +36,12 @@ dependencies:
   table_calendar:
   path_provider:
   flutter_quill:
+  image_picker:
+  image:
+  media_kit:
+  media_kit_video:
+  media_kit_libs_video:
+  permission_handler:
 
 
 
@@ -69,6 +75,7 @@ flutter:
     - assets/translations/
     - assets/fonts/
     - assets/Emojis/
+    - assets/images/
 
   fonts:
     - family: Nanum_JungHagSaeng

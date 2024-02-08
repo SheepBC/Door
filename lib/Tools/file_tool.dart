@@ -23,4 +23,26 @@ class File_Tool {
     }
   }
 
+  bool isVideoFile(String filePath) {
+    // 파일 경로에서 확장자 추출
+    String extension = filePath.split('.').last.toLowerCase();
+
+    // 비디오 파일 확장자 목록
+    List<String> videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'mkv']; // 필요에 따라 확장자 추가
+
+    // 비디오 파일인지 여부 확인
+    return videoExtensions.contains(extension);
+  }
+
+  bool isGif(String filePath) {
+    // 파일 경로에서 확장자 추출
+    String extension = filePath.split('.').last.toLowerCase();
+
+    // 비디오 파일 확장자 목록
+    List<String> videoExtensions = ['gif']; // 필요에 따라 확장자 추가
+
+    // 비디오 파일인지 여부 확인
+    return videoExtensions.contains(extension);
+  }
+
 }

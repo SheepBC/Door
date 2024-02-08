@@ -118,16 +118,16 @@ class _MainPageState extends State<MainPage> {
 
         floatingActionButton: InkWell(
           child: Container(
-            width: 50,
-            height: 50,
+            width: 55,
+            height: 55,
             child: Icon(Icons.add),
             decoration: BoxDecoration(
                 color: Theme.of(context).splashColor,
-                borderRadius: BorderRadius.all(Radius.circular(7.5))
+                borderRadius: BorderRadius.all(Radius.circular(10))
             ),
           ),
           onTap: () {
-
+            context.push("/diary",extra: DateTime.now());
           },
           onLongPress: () async{
             var doc = await getApplicationDocumentsDirectory();
@@ -228,7 +228,10 @@ class _CalenderState extends State<Calender> {
           ),
 
           onDaySelected: (day,_) {
-            if(day.isBefore(DateTime.now())) context.push("/diary",extra: day);
+            var local_day = DateTime(day.year,day.month,day.day);
+            print(local_day);
+            print(DateTime.now());
+            if(local_day.isBefore(DateTime.now())) context.push("/diary",extra: day);
           },
 
           onDayLongPressed: (day,_) {

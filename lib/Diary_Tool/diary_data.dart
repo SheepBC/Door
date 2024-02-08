@@ -4,13 +4,13 @@ import 'dart:io';
 
 import 'package:door/Tools/file_tool.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
 class Diary_Data{
 
-    List<Emoji> emojis = [Emoji.GOOD];
+    List<Emoji> emojis = [];
+    List<String> Gallery = [];
 
     DateTime day = DateTime.now();
 
@@ -45,6 +45,7 @@ class Diary_Data{
       data["emojis"] = getEmojisToString();
       data['day'] = day.toString();
       data['content'] = content;
+      data["Gallery"] = Gallery;
       return data;
     }
 
@@ -68,9 +69,29 @@ class Diary_Data{
       if(data.isNotEmpty){
         Map<String, dynamic> json = jsonDecode(data);
         content = json["content"];
-        print(content);
+        List emojis_Slist = json["emojis"];
+        Emoji.values.forEach((element) {
+          bool b = emojis_Slist.contains(element.name);
+          if(b) emojis.add(element);
+        });
+        List gallery = json["Gallery"];
+        gallery.forEach((element) {
+          Gallery.add(element.toString());
+        });
+
       }
 
+    }
+
+    Future<String> getGalleryPath() async{
+      Directory doc;
+      if(Platform.isAndroid){
+        doc = await getApplicationSupportDirectory();
+      }
+      else{
+        doc = await Directory.current;
+      }
+      return doc.path+"/Gallery";
     }
 
 }
@@ -78,22 +99,7 @@ class Diary_Data{
 enum Emoji{
   GOOD(Icon(Icons.headphones)),
   SAD(Icon(Icons.co2)),
-  NOT_BAD(Icon(Icons.cabin)),
-  GOOD1(Icon(Icons.headphones)),
-  SAD1(Icon(Icons.co2)),
-  NOT_BAD1(Icon(Icons.cabin)),
-  GOOD312(Icon(Icons.headphones)),
-  SAD312(Icon(Icons.co2)),
-  NOT_BAD312(Icon(Icons.cabin)),
-  GOOD1321(Icon(Icons.headphones)),
-  SAD1312(Icon(Icons.co2)),
-  NOT_BAD1321(Icon(Icons.cabin)),
-  GOOD31231(Icon(Icons.headphones)),
-  SAD234(Icon(Icons.co2)),
-  NOT_BAD543(Icon(Icons.cabin)),
-  GOOD1413(Icon(Icons.headphones)),
-  SAD1635(Icon(Icons.co2)),
-  NOT_BAD1243(Icon(Icons.cabin));
+  NOT_BAD(Icon(Icons.cabin));
 
 
   final Icon icon;
