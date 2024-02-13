@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:door/Tools/file_tool.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -21,9 +22,9 @@ import 'package:permission_handler/permission_handler.dart';
 
 
 class DiaryPage extends StatefulWidget {
-  DiaryPage({super.key,required this.diary});
+  DiaryPage({super.key,required this.day});
   
-  Diary_Data diary;
+  DateTime day;
 
   @override
   State<DiaryPage> createState() => _DiaryPageState();
@@ -35,6 +36,8 @@ class _DiaryPageState extends State<DiaryPage> {
   var isReadOnly = true;
   Map<String,String> list = {};
 
+  Diary_Data diary = Diary_Data(DateTime.now());
+
   double getWidth(BuildContext context){
     var size = MediaQuery.of(context).size;
     var aspectRatio = size.aspectRatio; //세로/가로
@@ -43,22 +46,23 @@ class _DiaryPageState extends State<DiaryPage> {
   }
 
   void load() async{
-    await widget.diary.Load();
-    if(widget.diary.content == ""){
+    diary = Diary_Data(widget.day);
+    await diary.Load();
+    if(diary.content == ""){
       isReadOnly = false;
       setState(() {
 
       });
     }
     else {
-      var json = jsonDecode(widget.diary.content);
+      var json = jsonDecode(diary.content);
       quillController.document = Document.fromJson(json);
 
       if(quillController.document.toPlainText() == "\n"){
         isReadOnly = false;
       }
 
-      widget.diary.Gallery.forEach((element) {
+      diary.Gallery.forEach((element) {
         list[element] = element;
       });
 
@@ -70,8 +74,8 @@ class _DiaryPageState extends State<DiaryPage> {
 
   void save(){
     var json = jsonEncode(quillController.document.toDelta().toJson());
-    widget.diary.content = json;
-    widget.diary.save(widget.diary);
+    diary.content = json;
+    diary.save(diary);
   }
 
   void change(){
@@ -147,14 +151,14 @@ class _DiaryPageState extends State<DiaryPage> {
                           )
                       ),
 
-                      if(widget.diary.Gallery.isNotEmpty)
+                      if(diary.Gallery.isNotEmpty)
                         Container(
                           width: getWidth(context),
                           height: getWidth(context)*2/3,
                           child: PageView.builder(
-                              itemCount: widget.diary.Gallery.length,
+                              itemCount: diary.Gallery.length,
                               itemBuilder: (context,index) {
-                                var path = widget.diary.Gallery[index];
+                                var path = diary.Gallery[index];
 
                                 var media;
 
@@ -193,12 +197,53 @@ class _DiaryPageState extends State<DiaryPage> {
                                   }
                                 }
 
-                                return Container(
+                                return InkWell(
+                                  splashColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+
+                                  child: Container(
                                     margin: EdgeInsets.all(20),
                                     child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: media
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: media
+                                    ),
                                   ),
+                                  onTap: () {
+                                    if(isReadOnly){
+                                      context.push("/mediaview",extra: path);
+                                    }
+                                    else{
+                                      showModalBottomSheet(
+                                          context: context,
+                                          builder: (context) {
+                                            return Wrap(
+                                              children: [
+                                                ListTile(
+                                                  leading: Icon(Icons.delete),
+                                                  title: Text("delete").tr(),
+                                                  onTap: () {
+                                                    diary.Gallery.removeAt(index);
+                                                    list.remove(path);
+                                                    File(path).delete();
+                                                    context.pop();
+                                                    setState(() {
+                                                    });
+
+                                                  },
+                                                ),
+                                                ListTile(
+                                                  leading: Icon(Icons.message),
+                                                  title: Text("memo").tr(),
+                                                  onTap: () {
+
+                                                  },
+                                                )
+                                              ],
+                                            );
+                                          }
+                                      );
+                                    }
+                                  },
                                 );
                               },
                             padEnds: false,
@@ -207,7 +252,7 @@ class _DiaryPageState extends State<DiaryPage> {
 
                       Container(
                         child: Text(
-                          "${DateFormat("Date Format".tr(),context.locale.languageCode).format(widget.diary.day)}",
+                          "${DateFormat("Date Format".tr(),context.locale.languageCode).format(diary.day)}",
                           textAlign: TextAlign.center,
                         ),
                         margin: EdgeInsets.all(10),
@@ -228,7 +273,7 @@ class _DiaryPageState extends State<DiaryPage> {
             ),
             bottomNavigationBar: (isReadOnly) ? null :Row(
               children: [
-                Expanded(child: ToolBar(controller: quillController,context: context,diary: widget.diary,change: change,list: list,)),
+                Expanded(child: ToolBar(controller: quillController,context: context,diary:diary,change: change,list: list,)),
                 IconButton(
                   icon: Icon(Icons.save),
                   onPressed: () {
@@ -289,17 +334,17 @@ class _ToolBarState extends State<ToolBar> {
       var medias =await image_Picker.pickMultipleMedia();
       medias.forEach((element) async{
 
-        var msg = [element.path,await getGalleryDir(),"null"];
+        var msg = [element.path,await getMediaDir(),"null"];
         if(File_Tool().isVideoFile(element.path)){
-          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${element.name}";
+          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(10000)}${element.name}";
           await compute((message) => saveOther(message[0],message[1],message[2]), msg);
         }
         else if(File_Tool().isGif(element.path)){
-          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${element.name}";
+          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(10000)}${element.name}";
           await compute((message) => saveOther(message[0],message[1],message[2]), msg);
         }
         else {
-          msg[2] = "${DateTime.now().microsecondsSinceEpoch}.png";
+          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(10000)}.png";
           compute((message) => saveImage(message[0],message[1],message[2]), msg);
         }
         var path = "${msg[1]}/${msg[2]}";
@@ -309,7 +354,7 @@ class _ToolBarState extends State<ToolBar> {
     }
   }
 
-  Future<String> getGalleryDir() async{
+  Future<String> getMediaDir() async{
     Directory doc;
     if(Platform.isAndroid){
       doc = await getApplicationSupportDirectory();
@@ -317,7 +362,7 @@ class _ToolBarState extends State<ToolBar> {
     else{
       doc = await Directory.current;
     }
-    return doc.path+"/Gallery";
+    return doc.path+"/Media";
   }
 
   @override
@@ -370,7 +415,7 @@ class _ToolBarState extends State<ToolBar> {
           customButtons: [
             QuillToolbarCustomButtonOptions(
               icon: Icon(Icons.image),
-              tooltip: "gallery".tr(),
+              tooltip: "media".tr(),
               onPressed: () {
                 _galleryButton();
               }
@@ -394,23 +439,23 @@ class _ToolBarState extends State<ToolBar> {
   }
 }
 
- void saveOther(String other_path,String GalleryPath,String fileName) async{
+ void saveOther(String other_path,String MediaPath,String fileName) async{
   XFile other = XFile(other_path);
-  String path = "${GalleryPath}/${fileName}";
-  Directory dir = Directory(GalleryPath);
+  String path = "${MediaPath}/${fileName}";
+  Directory dir = Directory(MediaPath);
   dir.create();
   other.saveTo(path);
 }
 
- void saveImage(String image_path,String GalleryPath,String fileName) async{
+ void saveImage(String image_path,String MediaPath,String fileName) async{
 
   XFile image = XFile(image_path);
   var media = await img_tool.decodeImageFile(image.path);
   var jpg = img_tool.encodeJpg(media!,quality: 75);
   var png = img_tool.encodePng(await img_tool.decodeImage(jpg)!);
 
-  String path = "${GalleryPath}/${fileName}";
-  Directory dir = Directory(GalleryPath);
+  String path = "${MediaPath}/${fileName}";
+  Directory dir = Directory(MediaPath);
   dir.create();
 
   await File(path).writeAsBytes(png);

@@ -5,6 +5,7 @@ import 'package:door/Diary_Tool/diary_data.dart';
 import 'package:door/Pages/Settings/language_settingPage.dart';
 import 'package:door/Pages/Settings/theme_settingPage.dart';
 import 'package:door/Pages/diaryPage.dart';
+import 'package:door/Pages/mediaViewPage.dart';
 import 'package:door/Pages/settingPage.dart';
 import 'package:door/Pages/testPage.dart';
 import 'package:door/Providers/setting.dart';
@@ -79,8 +80,10 @@ class _MyAppState extends State<MyApp> {
         GoRoute(path: "/themesetting",builder: (context,state) => Theme_SettingPage()),
         GoRoute(path: "/diary",builder: (context,state) {
           DateTime day = DateTime.parse(state.extra.toString());
-          Diary_Data diary = Diary_Data(day);
-          return DiaryPage(diary: diary);
+          return DiaryPage(day: day);
+        }),
+        GoRoute(path: "/mediaview",builder: (context,state) {
+          return Media_ViewPage(media: state.extra.toString());
         }),
 
         GoRoute(path: "/test",builder: (context,state) => TestPage()),
