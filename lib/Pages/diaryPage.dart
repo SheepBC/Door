@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:door/Tools/file_tool.dart';
+import 'package:door/Tools/other_tool.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,8 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:door/Diary_Tool/diary_path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import '../Diary_Tool/diary_tool.dart';
 
 
 class DiaryPage extends StatefulWidget {
@@ -84,6 +87,72 @@ class _DiaryPageState extends State<DiaryPage> {
     });
   }
 
+  void onTapMedia(String path,int index) async{
+    if(isReadOnly){
+      context.push("/mediaview",extra: list[path]);
+    }
+    else{
+      var memo = await getMemo(path);
+
+      showModalBottomSheet(
+          context: context,
+          builder: (context) {
+            return Wrap(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.delete),
+                  title: Text("delete").tr(),
+                  onTap: () {
+                    diary.Gallery.removeAt(index);
+                    list.remove(path);
+                    File(path).delete();
+                    context.pop();
+                    setState(() {
+                    });
+
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.message),
+                  title: Text("memo").tr(),
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          TextEditingController te_controller = TextEditingController();
+                          te_controller.text = memo == "null" ? "":memo;
+                          return AlertDialog(
+                            title: Text("memo").tr(),
+                            actions: [
+                              TextField(
+                                minLines: 1,
+                                maxLines: 2,
+                                maxLength: 100,
+                                autofocus: true,
+                                controller: te_controller,
+                              ),
+                              TextButton(
+                                  onPressed: () async{
+                                    var memo = te_controller.text;
+                                    if(memo != ""){
+                                      saveMemo(path,te_controller.text);
+                                      context.pop();
+                                    }
+                                  },
+                                  child: Text("memo").tr()
+                              )
+                            ],
+                          );
+                        }
+                    );
+                  },
+                )
+              ],
+            );
+          }
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -159,7 +228,6 @@ class _DiaryPageState extends State<DiaryPage> {
                               itemCount: diary.Gallery.length,
                               itemBuilder: (context,index) {
                                 var path = diary.Gallery[index];
-
                                 var media;
 
                                 File file = File(list[path]!);
@@ -192,58 +260,28 @@ class _DiaryPageState extends State<DiaryPage> {
                                         controller: controller,
                                         controls: null,
                                         fill: Colors.transparent,
+                                        filterQuality: FilterQuality.none,
                                         fit: BoxFit.cover
                                     );
                                   }
                                 }
 
-                                return InkWell(
-                                  splashColor: Colors.transparent,
-                                  highlightColor: Colors.transparent,
+                                return KeepWidget(
+                                    child:InkWell(
+                                      splashColor: Colors.transparent,
+                                      highlightColor: Colors.transparent,
 
-                                  child: Container(
-                                    margin: EdgeInsets.all(20),
-                                    child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: media
-                                    ),
-                                  ),
-                                  onTap: () {
-                                    if(isReadOnly){
-                                      context.push("/mediaview",extra: path);
-                                    }
-                                    else{
-                                      showModalBottomSheet(
-                                          context: context,
-                                          builder: (context) {
-                                            return Wrap(
-                                              children: [
-                                                ListTile(
-                                                  leading: Icon(Icons.delete),
-                                                  title: Text("delete").tr(),
-                                                  onTap: () {
-                                                    diary.Gallery.removeAt(index);
-                                                    list.remove(path);
-                                                    File(path).delete();
-                                                    context.pop();
-                                                    setState(() {
-                                                    });
-
-                                                  },
-                                                ),
-                                                ListTile(
-                                                  leading: Icon(Icons.message),
-                                                  title: Text("memo").tr(),
-                                                  onTap: () {
-
-                                                  },
-                                                )
-                                              ],
-                                            );
-                                          }
-                                      );
-                                    }
-                                  },
+                                      child: Container(
+                                        margin: EdgeInsets.all(20),
+                                        child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(10),
+                                            child: media
+                                        ),
+                                      ),
+                                      onTap: () {
+                                        onTapMedia(path,index);
+                                      },
+                                    )
                                 );
                               },
                             padEnds: false,

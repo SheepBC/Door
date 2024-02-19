@@ -14,4 +14,16 @@ class Diary_Path{
     }
     return doc.path+"/Gallery";
   }
+
+  Future<String> getMemoPath() async{
+    Directory doc;
+    if(Platform.isAndroid){
+      doc = await getApplicationSupportDirectory();
+    }
+    else{
+      doc = await Directory.current;
+    }
+    return doc.path+"/Memo.json";
+  }
+
 }
