@@ -5,6 +5,10 @@ import 'dart:io';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:door/Tools/file_tool.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_media_info/flutter_media_info.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
@@ -20,6 +24,7 @@ class Media_ViewPage extends StatefulWidget {
 class _Media_ViewPageState extends State<Media_ViewPage> {
 
   var showAppBar = true;
+  var showFloatingButton = false;
   var isImage = true;
 
   late final player = Player();
@@ -34,10 +39,17 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
   var isChanging = false;
   var seek = Duration.zero;
 
+  var gps;
+  var pageviewcontroller = PageController();
+
 
   @override
   void initState() {
-    print("sd");
+
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+
+    gps = getGps(widget.media);
+
     if(File_Tool().isVideoFile(widget.media)){
       isImage = false;
       MediaKit.ensureInitialized();
@@ -82,24 +94,65 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
         onDoubleTap: () {
           print("sd");
         },
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          child: InteractiveViewer(
-            maxScale: 10,
-            minScale: 0.01,
-            child: isImage ?
-            Image(image: FileImage(File(widget.media)),fit: BoxFit.contain,):
-            Video(
-              controller: controller,
-              controls: null,
-              filterQuality: FilterQuality.none,
+        child: PageView(
+          controller: pageviewcontroller,
+          children: [
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              child: InteractiveViewer(
+                maxScale: 10,
+                minScale: 0.01,
+                child: isImage ?
+                Image(image: FileImage(File(widget.media)),fit: BoxFit.contain,):
+                Video(
+                  controller: controller,
+                  controls: null,
+                  filterQuality: FilterQuality.none,
+                ),
+              ),
             ),
-          ),
+            if(gps != null)
+              FlutterMap(
+                options: MapOptions(
+                    zoom: 17.5,
+                    center: gps,
+                    minZoom: 2,
+                    maxZoom: 18.45
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  ),
+                  RichAttributionWidget(
+                    attributions: [
+                      TextSourceAttribution(
+                        'OpenStreetMap contributors',
+                        // onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+          ],
+
+          onPageChanged: (page) {
+            if(page != 0){
+              showAppBar = false;
+              showFloatingButton =true;
+            }
+            else {
+              showAppBar = true;
+              showFloatingButton = false;
+            }
+            setState(() {
+
+            });
+          },
         ),
       ),
       bottomNavigationBar: (!showAppBar || isImage) ? null:BottomAppBar(
-        height: 100,
+        height: 90,
         child: Column(
           children: [
             StreamBuilder<PlayerState>(
@@ -127,7 +180,7 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
                     },
                     icon: Icon(player.state.playing ? Icons.pause :Icons.play_arrow)
                 ),
-                Icon(Icons.volume_down),
+                Icon(volum == 0.0 ?Icons.volume_off: Icons.volume_up),
                 Container(
                   width: 100,
                   child: SliderTheme(
@@ -158,14 +211,23 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
           ],
         ),
       ),
+
+      floatingActionButton: !showFloatingButton ? null:FloatingActionButton.small(
+          child: Icon(Icons.arrow_back),
+          onPressed: () {
+            pageviewcontroller.jumpToPage(0);
+          }
+      ),
+
       extendBodyBehindAppBar: true,
       extendBody: true,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
     );
   }
 
   @override
   void dispose() {
-    print("dsa");
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     player.dispose();
     super.dispose();
   }

@@ -130,8 +130,7 @@ class _MainPageState extends State<MainPage> {
             context.push("/diary",extra: DateTime.now());
           },
           onLongPress: () async{
-            var doc = await getApplicationDocumentsDirectory();
-            print(doc.listSync());
+            context.push("/test");
 
           },
           borderRadius: BorderRadius.all(Radius.circular(7.5)),

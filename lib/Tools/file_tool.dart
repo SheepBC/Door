@@ -1,5 +1,7 @@
 
 import 'dart:io';
+import 'package:latlong2/latlong.dart';
+import 'package:flutter_media_info/flutter_media_info.dart';
 
 class File_Tool {
 
@@ -44,5 +46,23 @@ class File_Tool {
     // 비디오 파일인지 여부 확인
     return videoExtensions.contains(extension);
   }
+
+}
+
+LatLng? getGps(String path){
+  if(File_Tool().isVideoFile(path)){
+    final mediainfo = Mediainfo();
+    mediainfo.quickLoad(path);
+    final info = mediainfo.getInfo(MediaInfoStreamType.mediaInfoStreamGeneral,0, "xyz");
+    print(info);
+
+    RegExp regex = RegExp(r'([-+]?\d*\.\d+|[-+]?\d+)');
+    Iterable<Match> matches = regex.allMatches(info);
+    List<String> numbers = matches.map((match) => match.group(0)!).toList();
+    if(numbers.isEmpty) return null;
+    return LatLng(double.parse(numbers[0]), double.parse(numbers[1]));
+  }
+
+  return LatLng(10, 10);
 
 }
