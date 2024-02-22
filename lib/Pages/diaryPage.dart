@@ -382,7 +382,7 @@ class _ToolBarState extends State<ToolBar> {
           await compute((message) => saveOther(message[0],message[1],message[2]), msg);
         }
         else {
-          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(10000)}.png";
+          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(10000)}.jpg";
           compute((message) => saveImage(message[0],message[1],message[2]), msg);
         }
         var path = "${msg[1]}/${msg[2]}";
@@ -490,13 +490,12 @@ class _ToolBarState extends State<ToolBar> {
   XFile image = XFile(image_path);
   var media = await img_tool.decodeImageFile(image.path);
   var jpg = img_tool.encodeJpg(media!,quality: 75);
-  var png = img_tool.encodePng(await img_tool.decodeImage(jpg)!);
 
   String path = "${MediaPath}/${fileName}";
   Directory dir = Directory(MediaPath);
   dir.create();
 
-  await File(path).writeAsBytes(png);
+  await File(path).writeAsBytes(jpg);
 
 }
 

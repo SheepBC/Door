@@ -1,5 +1,6 @@
 
 import 'dart:io';
+import 'package:image/image.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_media_info/flutter_media_info.dart';
 
@@ -49,7 +50,7 @@ class File_Tool {
 
 }
 
-LatLng? getGps(String path){
+Future<LatLng?> getGps(String path) async{
   if(File_Tool().isVideoFile(path)){
     final mediainfo = Mediainfo();
     mediainfo.quickLoad(path);
@@ -62,7 +63,54 @@ LatLng? getGps(String path){
     if(numbers.isEmpty) return null;
     return LatLng(double.parse(numbers[0]), double.parse(numbers[1]));
   }
+  else {
+    var image = await decodeImageFile(path);
+    print(path);
+    var NS = image?.exif.gpsIfd[1].toString();
+    var lat = image?.exif.gpsIfd[2].toString().replaceAll("[", "").replaceAll("]", "");
+    var EW = image?.exif.gpsIfd[3].toString();
+    var lng = image?.exif.gpsIfd[4].toString().replaceAll("[", "").replaceAll("]", "");
+
+    print(image!.exif.gpsIfd.values);
+    return LatLng(toGps(lat!)*getMark(NS!), toGps(lng!)*getMark(EW!));
+
+  }
 
   return LatLng(10, 10);
 
+}
+int getMark(String s){
+  var mark = 1;
+
+  switch(s){
+    case "S":
+    case "W":
+      mark = -1;
+  }
+  return mark;
+}
+
+double toGps(String s){
+  List<String> list = s.split(",");
+  double result = 0.0;
+  int index = 0;
+  list.forEach((element) {
+
+    var divide = element.split("/");
+    var num = double.parse(divide[0])/double.parse(divide[1]);
+    switch(index){
+      case 0:
+        result += num;
+        break;
+      case 1:
+        result += num/60;
+        break;
+      case 2:
+        result += num/3600;
+        break;
+    }
+
+    index++;
+  });
+  return result;
 }

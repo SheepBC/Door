@@ -42,13 +42,16 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
   var gps;
   var pageviewcontroller = PageController();
 
+  void setGps() async{
+    gps = await getGps(widget.media);
+  }
 
   @override
   void initState() {
 
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
 
-    gps = getGps(widget.media);
+    setGps();
 
     if(File_Tool().isVideoFile(widget.media)){
       isImage = false;
@@ -124,7 +127,7 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
                   TileLayer(
                     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   ),
-                  RichAttributionWidget(
+                  const RichAttributionWidget(
                     attributions: [
                       TextSourceAttribution(
                         'OpenStreetMap contributors',
@@ -132,6 +135,16 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
                       ),
                     ],
                   ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                          point: gps,
+                          builder: (context) {
+                            return Icon(Icons.add);
+                          }
+                      )
+                    ],
+                  )
                 ],
               )
           ],
