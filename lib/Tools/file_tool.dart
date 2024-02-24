@@ -56,7 +56,7 @@ Future<LatLng?> getGps(String path) async{
     mediainfo.quickLoad(path);
     final info = mediainfo.getInfo(MediaInfoStreamType.mediaInfoStreamGeneral,0, "xyz");
     print(info);
-
+    if(info == "()") return null;
     RegExp regex = RegExp(r'([-+]?\d*\.\d+|[-+]?\d+)');
     Iterable<Match> matches = regex.allMatches(info);
     List<String> numbers = matches.map((match) => match.group(0)!).toList();
@@ -72,6 +72,7 @@ Future<LatLng?> getGps(String path) async{
     var lng = image?.exif.gpsIfd[4].toString().replaceAll("[", "").replaceAll("]", "");
 
     print(image!.exif.gpsIfd.values);
+    if(image!.exif.gpsIfd.values.isEmpty) return null;
     return LatLng(toGps(lat!)*getMark(NS!), toGps(lng!)*getMark(EW!));
 
   }
@@ -113,4 +114,11 @@ double toGps(String s){
     index++;
   });
   return result;
+}
+
+Future<String> getDay(String path) async{
+  var file = File(path);
+  file.statSync().modified;
+  print(file.statSync().modified);
+  return file.statSync().modified.toString();
 }

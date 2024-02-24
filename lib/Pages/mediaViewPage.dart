@@ -3,14 +3,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'package:door/Diary_Tool/diary_tool.dart';
 import 'package:door/Tools/file_tool.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_media_info/flutter_media_info.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:latlong2/latlong.dart';
 
 class Media_ViewPage extends StatefulWidget {
   Media_ViewPage({super.key,required this.media});
@@ -97,24 +97,11 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
         onDoubleTap: () {
           print("sd");
         },
+        child: Media_View(path: widget.media, controller: controller),
+        /*
         child: PageView(
           controller: pageviewcontroller,
           children: [
-            Container(
-              width: double.infinity,
-              height: double.infinity,
-              child: InteractiveViewer(
-                maxScale: 10,
-                minScale: 0.01,
-                child: isImage ?
-                Image(image: FileImage(File(widget.media)),fit: BoxFit.contain,):
-                Video(
-                  controller: controller,
-                  controls: null,
-                  filterQuality: FilterQuality.none,
-                ),
-              ),
-            ),
             if(gps != null)
               FlutterMap(
                 options: MapOptions(
@@ -163,6 +150,7 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
             });
           },
         ),
+        */
       ),
       bottomNavigationBar: (!showAppBar || isImage) ? null:BottomAppBar(
         height: 90,
@@ -245,3 +233,179 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
     super.dispose();
   }
 }
+
+class Media_View extends StatefulWidget {
+  Media_View({super.key,required this.path,required this.controller});
+
+  String path;
+  VideoController controller;
+
+  @override
+  State<Media_View> createState() => _Media_ViewState();
+}
+
+class _Media_ViewState extends State<Media_View> {
+
+  var isImage = true;
+
+  var gps;
+  var day;
+  var memo;
+
+  int drag = 0;
+  double max_Up_persent = 1/3;
+  double max_Down_persent = 2/3;
+  bool isChanging = false;
+  bool isMax = false;
+  Color infoBoxColor() {
+    var base = Theme.of(context).backgroundColor;
+    var result = Color.fromARGB((255*drag/getInfoMax()).toInt(), base.red, base.green, base.blue);
+    return result;
+  }
+
+  void loadInfo() async{
+    gps = await getGps(widget.path);
+    day = await getDay(widget.path);
+    memo = await getMemo(widget.path);
+    setState(() {
+      print("${gps},${day},${memo}");
+    });
+  }
+
+  int getInfoMax(){
+    return (MediaQuery.of(context).size.height*max_Up_persent).toInt();
+  }
+
+  int getInfoMaxDown(){
+    return (getInfoMax()*max_Down_persent).toInt();
+  }
+
+  @override
+  void initState() {
+
+    if(File_Tool().isVideoFile(widget.path)) isImage = false;
+    loadInfo();
+
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      child: Stack(
+        children: [
+          Container(
+            height: MediaQuery.of(context).size.height,
+            width: double.infinity,
+            child: InteractiveViewer(
+              maxScale: 10,
+              minScale: 0.01,
+              child: isImage ?
+              Image(image: FileImage(File(widget.path)),fit: BoxFit.contain,):
+              Video(
+                controller: widget.controller,
+                controls: null,
+                filterQuality: FilterQuality.none,
+              ),
+            ),
+          ),
+          if(drag >0)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                width: double.infinity,
+                height: drag.toDouble(),
+                decoration: BoxDecoration(color: infoBoxColor()),
+                child: isChanging ? null:Column(
+                  children: [
+                    if(day != null)
+                      Text(day),
+                    if(gps != null)
+                      Text(gps),
+                    if(memo != null)
+                      Text(memo)
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+      onVerticalDragStart: (detaill) {
+        print("Start: ${detaill.globalPosition}");
+        isChanging = true;
+      },
+      onVerticalDragUpdate: (detail){
+        var add = detail.primaryDelta;
+        if(drag >= getInfoMax()) {
+          if(add! > 0){
+            drag -= add.toInt();
+          }
+        }
+        else{
+
+          if(add != null) drag -= add.toInt();
+        }
+
+        setState(() {
+
+        });
+      },
+      onVerticalDragEnd: (detaill) {
+        print("End: ${drag}");
+        isChanging = false;
+        if(drag >= getInfoMax()){
+          isMax = true;
+        }
+        else{
+          if(drag >= getInfoMaxDown() && isMax){
+            drag = getInfoMax();
+          }
+          else{
+            drag = 0;
+            isMax = false;
+          }
+        }
+        setState(() {
+
+        });
+      },
+    );
+
+    return PageView(
+      scrollDirection: Axis.vertical,
+      children: [
+        Container(
+          height: MediaQuery.of(context).size.height,
+          width: double.infinity,
+          child: InteractiveViewer(
+            maxScale: 10,
+            minScale: 0.01,
+            child: isImage ?
+            Image(image: FileImage(File(widget.path)),fit: BoxFit.contain,):
+            Video(
+              controller: widget.controller,
+              controls: null,
+              filterQuality: FilterQuality.none,
+            ),
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.all(20),
+          width: double.infinity,
+          decoration: BoxDecoration(color: Colors.red),
+          child: Column(
+            children: [
+              if(day != null)
+                Text(day),
+              if(gps != null)
+                Text(gps),
+              if(memo != null)
+                Text(memo)
+            ],
+          ),
+        )
+      ],
+    );
+  }
+}
+
