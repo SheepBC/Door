@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:door/Diary_Tool/diary_tool.dart';
 import 'package:door/Tools/file_tool.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -50,8 +51,6 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
   void initState() {
 
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
-
-    setGps();
 
     if(File_Tool().isVideoFile(widget.media)){
       isImage = false;
@@ -252,10 +251,12 @@ class _Media_ViewState extends State<Media_View> {
   var day;
   var memo;
 
+  bool getInfo = false;
+
   int drag = 0;
-  double max_Up_persent = 1/3;
-  double max_Down_persent = 2/3;
+  double max_Up_persent = 1/2;
   bool isChanging = false;
+  bool isUpdating = false;
   bool isMax = false;
   Color infoBoxColor() {
     var base = Theme.of(context).backgroundColor;
@@ -263,149 +264,127 @@ class _Media_ViewState extends State<Media_View> {
     return result;
   }
 
-  void loadInfo() async{
-    gps = await getGps(widget.path);
-    day = await getDay(widget.path);
-    memo = await getMemo(widget.path);
-    setState(() {
-      print("${gps},${day},${memo}");
-    });
-  }
-
   int getInfoMax(){
     return (MediaQuery.of(context).size.height*max_Up_persent).toInt();
   }
 
-  int getInfoMaxDown(){
-    return (getInfoMax()*max_Down_persent).toInt();
+  void setInfo() async{
+    var value = await loadInfo(widget.path);
+    gps = value[0];
+    day = value[1];
+    memo = value[2];
+    setState(() {
+
+    });
   }
+
 
   @override
   void initState() {
 
     if(File_Tool().isVideoFile(widget.path)) isImage = false;
-    loadInfo();
-
+    print("object");
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Stack(
-        children: [
-          Container(
-            height: MediaQuery.of(context).size.height,
-            width: double.infinity,
-            child: InteractiveViewer(
-              maxScale: 10,
-              minScale: 0.01,
-              child: isImage ?
-              Image(image: FileImage(File(widget.path)),fit: BoxFit.contain,):
-              Video(
-                controller: widget.controller,
-                controls: null,
-                filterQuality: FilterQuality.none,
-              ),
-            ),
+
+    if(!getInfo){
+      getInfo = true;
+      setInfo();
+    }
+
+    return InkWell(
+      child: Container(
+        height: MediaQuery.of(context).size.height,
+        width: double.infinity,
+        child: InteractiveViewer(
+          maxScale: 10,
+          minScale: 0.01,
+          child: isImage ?
+          Image(image: FileImage(File(widget.path)),fit: BoxFit.contain,):
+          Video(
+            controller: widget.controller,
+            controls: null,
+            filterQuality: FilterQuality.none,
           ),
-          if(drag >0)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
+        ),
+      ),
+
+      onDoubleTap: () {
+        print("object");
+        showBottomSheet(
+            context: context,
+            builder: (context) {
+
+              return Container(
+                height: getInfoMax().toDouble(),
                 width: double.infinity,
-                height: drag.toDouble(),
-                decoration: BoxDecoration(color: infoBoxColor()),
-                child: isChanging ? null:Column(
+                child: Column(
                   children: [
+                    if(memo != null)
+                      Text(memo),
                     if(day != null)
                       Text(day),
                     if(gps != null)
-                      Text(gps),
-                    if(memo != null)
-                      Text(memo)
+                      Text(gps.toString()),
+                    if(gps != null)
+                      Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            height: 250,
+                            margin: EdgeInsets.all(20),
+                            child: FlutterMap(
+                              options: MapOptions(
+                                  zoom: 17.5,
+                                  center: gps,
+                                  minZoom: 2,
+                                  maxZoom: 18.45
+                              ),
+                              children: [
+                                TileLayer(
+                                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                ),
+                                const RichAttributionWidget(
+                                  attributions: [
+                                    TextSourceAttribution(
+                                      'OpenStreetMap contributors',
+                                      // onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+                                    ),
+                                  ],
+                                ),
+                                MarkerLayer(
+                                  markers: [
+                                    Marker(
+                                        point: gps,
+                                        builder: (context) {
+                                          return Icon(Icons.bookmark,color: Colors.red,);
+                                        }
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          )
+                      )
                   ],
                 ),
-              ),
-            ),
-        ],
-      ),
-      onVerticalDragStart: (detaill) {
-        print("Start: ${detaill.globalPosition}");
-        isChanging = true;
+              );
+            }
+        );
       },
-      onVerticalDragUpdate: (detail){
-        var add = detail.primaryDelta;
-        if(drag >= getInfoMax()) {
-          if(add! > 0){
-            drag -= add.toInt();
-          }
-        }
-        else{
 
-          if(add != null) drag -= add.toInt();
-        }
-
-        setState(() {
-
-        });
-      },
-      onVerticalDragEnd: (detaill) {
-        print("End: ${drag}");
-        isChanging = false;
-        if(drag >= getInfoMax()){
-          isMax = true;
-        }
-        else{
-          if(drag >= getInfoMaxDown() && isMax){
-            drag = getInfoMax();
-          }
-          else{
-            drag = 0;
-            isMax = false;
-          }
-        }
-        setState(() {
-
-        });
-      },
     );
 
-    return PageView(
-      scrollDirection: Axis.vertical,
-      children: [
-        Container(
-          height: MediaQuery.of(context).size.height,
-          width: double.infinity,
-          child: InteractiveViewer(
-            maxScale: 10,
-            minScale: 0.01,
-            child: isImage ?
-            Image(image: FileImage(File(widget.path)),fit: BoxFit.contain,):
-            Video(
-              controller: widget.controller,
-              controls: null,
-              filterQuality: FilterQuality.none,
-            ),
-          ),
-        ),
-        Container(
-          margin: EdgeInsets.all(20),
-          width: double.infinity,
-          decoration: BoxDecoration(color: Colors.red),
-          child: Column(
-            children: [
-              if(day != null)
-                Text(day),
-              if(gps != null)
-                Text(gps),
-              if(memo != null)
-                Text(memo)
-            ],
-          ),
-        )
-      ],
-    );
   }
+}
+
+Future<List<dynamic>> loadInfo(String path) async{
+  List<dynamic> list =[null,null,null];
+  list[0] = await getGps(path);
+  list[1] = await getDay(path);
+  list[2] = await getMemo(path);
+  return list;
 }
 
