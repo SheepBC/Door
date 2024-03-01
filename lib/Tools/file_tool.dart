@@ -1,8 +1,11 @@
 
 import 'dart:io';
+import 'package:flutter_video_info/flutter_video_info.dart';
 import 'package:image/image.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_media_info/flutter_media_info.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 
 class File_Tool {
 
@@ -52,28 +55,51 @@ class File_Tool {
 
 Future<LatLng?> getGps(String path) async{
   if(File_Tool().isVideoFile(path)){
-    final mediainfo = Mediainfo();
-    mediainfo.quickLoad(path);
-    final info = mediainfo.getInfo(MediaInfoStreamType.mediaInfoStreamGeneral,0, "xyz");
-    print(info);
-    if(info == "()") return null;
-    RegExp regex = RegExp(r'([-+]?\d*\.\d+|[-+]?\d+)');
-    Iterable<Match> matches = regex.allMatches(info);
-    List<String> numbers = matches.map((match) => match.group(0)!).toList();
-    if(numbers.isEmpty) return null;
-    return LatLng(double.parse(numbers[0]), double.parse(numbers[1]));
+    if(Platform.isWindows){
+      final mediainfo = Mediainfo();
+      mediainfo.quickLoad(path);
+      final info = mediainfo.getInfo(MediaInfoStreamType.mediaInfoStreamGeneral,0, "xyz");
+      //print(info);
+      if(info == "()") return null;
+      RegExp regex = RegExp(r'([-+]?\d*\.\d+|[-+]?\d+)');
+      Iterable<Match> matches = regex.allMatches(info);
+      List<String> numbers = matches.map((match) => match.group(0)!).toList();
+      if(numbers.isEmpty) return null;
+      return LatLng(double.parse(numbers[0]), double.parse(numbers[1]));
+    }
+    else if(Platform.isAndroid){
+      await Permission.accessMediaLocation.request();
+
+      final videoInfo = FlutterVideoInfo();
+      var infos = await videoInfo.getVideoInfo(path);
+      var info = infos!.location;
+
+      if(info.toString() == "null") return null;
+      RegExp regex = RegExp(r'([-+]?\d*\.\d+|[-+]?\d+)');
+      Iterable<Match> matches = regex.allMatches(info!);
+      List<String> numbers = matches.map((match) => match.group(0)!).toList();
+      if(numbers.isEmpty) return null;
+      return LatLng(double.parse(numbers[0]), double.parse(numbers[1]));
+
+      //print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++@@${info!.location}");
+      //+35.1972+129.2141/
+
+    }
+    return null;
   }
   else {
     var image = await decodeImageFile(path);
-    print(path);
+    //print("=================================================================================${image?.exif.gpsIfd.values.length}");
+    //print("=================================================================================${image?.exif.gpsIfd.values}");
     var NS = image?.exif.gpsIfd[1].toString();
     var lat = image?.exif.gpsIfd[2].toString().replaceAll("[", "").replaceAll("]", "");
     var EW = image?.exif.gpsIfd[3].toString();
     var lng = image?.exif.gpsIfd[4].toString().replaceAll("[", "").replaceAll("]", "");
-
-    print(image!.exif.gpsIfd.values);
+    //print("${lat}@${lng}@${NS!}@${EW}");
     if(image!.exif.gpsIfd.values.isEmpty) return null;
-    return LatLng(toGps(lat!)*getMark(NS!), toGps(lng!)*getMark(EW!));
+    var result = LatLng(toGps(lat!)*getMark(NS!), toGps(lng!)*getMark(EW!));
+    if(result.latitude.toString() == "NaN") return null;
+    return result;
 
   }
 

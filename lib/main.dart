@@ -1,7 +1,6 @@
 
 import 'dart:io';
 
-import 'package:door/Diary_Tool/diary_data.dart';
 import 'package:door/Pages/Settings/language_settingPage.dart';
 import 'package:door/Pages/Settings/theme_settingPage.dart';
 import 'package:door/Pages/diaryPage.dart';
@@ -9,7 +8,6 @@ import 'package:door/Pages/mediaViewPage.dart';
 import 'package:door/Pages/settingPage.dart';
 import 'package:door/Pages/testPage.dart';
 import 'package:door/Providers/setting.dart';
-import 'package:door/Providers/theme_setting.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

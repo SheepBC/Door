@@ -130,7 +130,7 @@ class _MainPageState extends State<MainPage> {
             context.push("/diary",extra: DateTime.now());
           },
           onLongPress: () async{
-            context.push("/test");
+            context.push("/test",extra: DateTime.now().add(Duration(days: -10)));
 
           },
           borderRadius: BorderRadius.all(Radius.circular(7.5)),

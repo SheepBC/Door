@@ -4,29 +4,25 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:door/Tools/file_tool.dart';
+import 'package:door/Tools/DiaryPage_Tool/DiaryPage_Tool.dart';
+import 'package:door/Tools/Diary_Tool/diary_data.dart';
+import 'package:door/Tools/Diary_Tool/diary_tool.dart';
 import 'package:door/Tools/other_tool.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:door/Diary_Tool/diary_data.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image/image.dart' as img_tool;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:door/Diary_Tool/diary_path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../Diary_Tool/diary_tool.dart';
-
+import '../Tools/file_tool.dart';
 
 class DiaryPage extends StatefulWidget {
   DiaryPage({super.key,required this.day});
-  
+
   DateTime day;
 
   @override
@@ -34,60 +30,106 @@ class DiaryPage extends StatefulWidget {
 }
 
 class _DiaryPageState extends State<DiaryPage> {
-  
-  QuillController quillController = QuillController.basic();
-  var isReadOnly = true;
+
+  Diary_Data diary_data = Diary_Data(DateTime.now());
   Map<String,String> list = {};
 
-  Diary_Data diary = Diary_Data(DateTime.now());
+  ScrollController List_Controller = ScrollController();
+  QuillController quillController = QuillController.basic();
 
-  double getWidth(BuildContext context){
-    var size = MediaQuery.of(context).size;
-    var aspectRatio = size.aspectRatio; //세로/가로
-    if(aspectRatio >= 3/2) return size.width/2;
-    return size.width;
-  }
+  bool isReadOnly = true;
 
-  void load() async{
-    diary = Diary_Data(widget.day);
-    await diary.Load();
-    if(diary.content == ""){
+  int nowPage = 1;
+  Map<String,Video> videos = {};
+
+  void Diary_Load() async{
+    diary_data = Diary_Data(widget.day);
+    await diary_data.Load();
+
+    if(diary_data.content == ""){
       isReadOnly = false;
       setState(() {
 
       });
     }
     else {
-      var json = jsonDecode(diary.content);
+      var json = jsonDecode(diary_data.content);
       quillController.document = Document.fromJson(json);
 
       if(quillController.document.toPlainText() == "\n"){
         isReadOnly = false;
       }
 
-      diary.Gallery.forEach((element) {
+      diary_data.Gallery.forEach((element) {
         list[element] = element;
       });
 
       setState(() {
-
+        moveTop();
       });
     }
+
   }
 
   void save(){
     var json = jsonEncode(quillController.document.toDelta().toJson());
-    diary.content = json;
-    diary.save(diary);
+    diary_data.content = json;
+    diary_data.save(diary_data);
   }
 
-  void change(){
-    setState(() {
+  void moveTop(){
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      var max = List_Controller.position.maxScrollExtent;
+      //print(max);
+      List_Controller.jumpTo(max);
 
     });
   }
 
-  void onTapMedia(String path,int index) async{
+  Future<void> MediaButton() async{
+    if(Platform.isAndroid){
+      await Permission.photos.request();
+      await Permission.videos.request();
+    }
+
+    var image_Picker = ImagePicker();
+    var medias =await image_Picker.pickMultipleMedia();
+    medias.forEach((element) async {
+      var msg = [element.path, await getMediaDir(), "null"];
+      if (File_Tool().isVideoFile(element.path)) {
+        msg[2] = "${DateTime
+            .now()
+            .microsecondsSinceEpoch}${Random().nextInt(10000)}${element.name}";
+        await compute((message) =>
+            saveOther(message[0], message[1], message[2]), msg);
+      }
+      else if (File_Tool().isGif(element.path)) {
+        msg[2] = "${DateTime
+            .now()
+            .microsecondsSinceEpoch}${Random().nextInt(10000)}${element.name}";
+        await compute((message) =>
+            saveOther(message[0], message[1], message[2]), msg);
+      }
+      else {
+        msg[2] = "${DateTime
+            .now()
+            .microsecondsSinceEpoch}${Random().nextInt(10000)}.jpg";
+        compute((message) => saveImage(message[0], message[1], message[2]),
+            msg);
+      }
+      var path = "${msg[1]}/${msg[2]}";
+      list[path] = element.path;
+      diary_data.Gallery.add(path);
+      setState(() {
+
+      });
+    });
+    context.pop();
+  }
+
+  void onTapMedia(int index) async{
+    var path = diary_data.Gallery[index];
+
     if(isReadOnly){
       context.push("/mediaview",extra: list[path]);
     }
@@ -103,7 +145,7 @@ class _DiaryPageState extends State<DiaryPage> {
                   leading: Icon(Icons.delete),
                   title: Text("delete").tr(),
                   onTap: () {
-                    diary.Gallery.removeAt(index);
+                    diary_data.Gallery.removeAt(index);
                     list.remove(path);
                     File(path).delete();
                     context.pop();
@@ -151,351 +193,338 @@ class _DiaryPageState extends State<DiaryPage> {
             );
           }
       );
+
     }
   }
 
   @override
   void initState() {
-    super.initState();
-    load();
+    Diary_Load();
+    moveTop();
     MediaKit.ensureInitialized();
-
+    super.initState();
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-        canPop: isReadOnly,
-      onPopInvoked: (b) {
-        save();
-        context.pop();
-      },
-
+    return Base(
         child: Scaffold(
-          body: Scaffold(
-            appBar: AppBar(
-              title: Text("Diary").tr(),
-              actions: [
-                if(isReadOnly)
-                  PopupMenuButton(
-                    itemBuilder: (context) {
-                      return [
-                        PopupMenuItem(
-                          child: Center(child: Text("Edit",style: TextStyle(fontWeight: FontWeight.bold),softWrap: true,).tr(),),
-                          height: 30,
-                          onTap: () {
-                            isReadOnly = false;
-                            setState(() {
-
-                            });
-                          },
-                        ),
-                      ];
-                    },
-                    position: PopupMenuPosition.under,
-                    constraints: BoxConstraints(
-                      minWidth: 0.5,
-                    ),
-                    tooltip: "",
-                  )
-              ],
-            ),
-
-            body: Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  width: getWidth(context),
-                  margin: EdgeInsets.all(20),
-                  child: ListView(
-                    shrinkWrap: true,
-                    reverse: true,
-                    children: [
-                      QuillEditor.basic(
-                          configurations: QuillEditorConfigurations(
-                            controller: quillController,
-                            readOnly: isReadOnly,
-                            autoFocus: !isReadOnly,
-                            showCursor: !isReadOnly,
-                            placeholder: "Placeholder".tr(),
-                          )
-                      ),
-
-                      if(diary.Gallery.isNotEmpty)
-                        Container(
-                          width: getWidth(context),
-                          height: getWidth(context)*2/3,
-                          child: PageView.builder(
-                              itemCount: diary.Gallery.length,
-                              itemBuilder: (context,index) {
-                                var path = diary.Gallery[index];
-                                var media;
-
-                                File file = File(list[path]!);
-                                bool isNull = !file.existsSync();
-                                if(isNull){
-                                  Timer(Duration(seconds: 3), () {
-                                    setState(() {
-
-                                    });
-                                  });
-                                  media = Stack(
-                                    children: [
-                                      Container(decoration: BoxDecoration(color: Theme.of(context).highlightColor),),
-                                      Center(
-                                        child: CircularProgressIndicator(),
-                                      )
-                                    ],
-                                  );
-                                }
-                                else {
-                                  if(!File_Tool().isVideoFile(path)){
-                                    media = Image(image: FileImage(file),fit: BoxFit.cover);
-                                  }
-                                  else{
-                                    final player = Player();
-                                    final controller = VideoController(player);
-
-                                    player.open(Media(list[path]!),play: false);
-                                    media = Video(
-                                        controller: controller,
-                                        controls: null,
-                                        fill: Colors.transparent,
-                                        filterQuality: FilterQuality.none,
-                                        fit: BoxFit.cover
-                                    );
-                                  }
-                                }
-
-                                return KeepWidget(
-                                    child:InkWell(
-                                      splashColor: Colors.transparent,
-                                      highlightColor: Colors.transparent,
-
-                                      child: Container(
-                                        margin: EdgeInsets.all(20),
-                                        child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(10),
-                                            child: media
-                                        ),
-                                      ),
-                                      onTap: () {
-                                        onTapMedia(path,index);
-                                      },
-                                    )
-                                );
-                              },
-                            padEnds: false,
-                          ),
-                        ),
-
-                      Container(
-                        child: Text(
-                          "${DateFormat("Date Format".tr(),context.locale.languageCode).format(diary.day)}",
-                          textAlign: TextAlign.center,
-                        ),
-                        margin: EdgeInsets.all(10),
-                      ),
-                      Column(
-                          children: [
-                            InkWell(
-                              child: Image.asset("assets/Emojis/Test_Emoji.png",height: 50,width: 50,),
-                              onTap: (isReadOnly) ? null: () {
-                                print("sd");
-                              },
-                            )
-                          ]
-                      ),
-                    ],
-                  ),
-                )
-            ),
-            bottomNavigationBar: (isReadOnly) ? null :Row(
-              children: [
-                Expanded(child: ToolBar(controller: quillController,context: context,diary:diary,change: change,list: list,)),
-                IconButton(
-                  icon: Icon(Icons.save),
-                  onPressed: () {
-                    isReadOnly = true;
-                    save();
-                    setState(() {
-
-                    });
-                  },
-                )
-              ],
-            ),
-
-          ),
-        ),
-
+          appBar: DiaryPageAppBar(),
+          body: DiaryPageBody(),
+          bottomNavigationBar: DiaryBottomAppBar(),
+        )
     );
   }
-}
 
-class ToolBar extends StatefulWidget {
-  ToolBar({super.key,required this.controller,required this.context,required this.diary,required this.change,required this.list});
-
-  QuillController controller;
-  BuildContext context;
-  Diary_Data diary;
-  Function change;
-  Map<String,String> list;
-
-  @override
-  State<ToolBar> createState() => _ToolBarState();
-}
-
-class _ToolBarState extends State<ToolBar> {
-
-  var iconShape = IconButtonData(
-    style: ButtonStyle(
-        shape: MaterialStateProperty.resolveWith<OutlinedBorder>((states) => BeveledRectangleBorder())
-    ),
-  );
-
-  void addGallery(String path){
-    widget.diary.Gallery.add(path);
-    widget.change();
+  Widget Base({required Widget child}){
+    return PopScope(
+        canPop: isReadOnly,
+        onPopInvoked: (b) {
+          save();
+          context.pop();
+        },
+        child: Scaffold(
+          body: child,
+        )
+    );
   }
 
-  Future<void> _galleryButton() async{
-    if(Platform.isAndroid){
-      await Permission.photos.request();
-      await Permission.videos.request();
-    }
+  AppBar DiaryPageAppBar(){
+    return AppBar(
+      title: Text("Diary").tr(),
 
-    if(Platform.isIOS){
+      actions: [
+        if(isReadOnly)
+          PopupMenuButton(
+              position: PopupMenuPosition.under,
+              tooltip: "",
+              itemBuilder: (context){
+                return [
+                  PopupMenuItem(
+                    height: 30,
+                    onTap: () {
+                      isReadOnly = false;
+                      setState(() {
 
-    }
-    else{
-      var image_Picker = ImagePicker();
-      var medias =await image_Picker.pickMultipleMedia();
-      medias.forEach((element) async{
-
-        var msg = [element.path,await getMediaDir(),"null"];
-        if(File_Tool().isVideoFile(element.path)){
-          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(10000)}${element.name}";
-          await compute((message) => saveOther(message[0],message[1],message[2]), msg);
-        }
-        else if(File_Tool().isGif(element.path)){
-          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(10000)}${element.name}";
-          await compute((message) => saveOther(message[0],message[1],message[2]), msg);
-        }
-        else {
-          msg[2] = "${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(10000)}.jpg";
-          compute((message) => saveImage(message[0],message[1],message[2]), msg);
-        }
-        var path = "${msg[1]}/${msg[2]}";
-        widget.list[path] = element.path;
-        addGallery("${msg[1]}/${msg[2]}");
-      });
-    }
+                      });
+                    },
+                    child: Center(
+                      child: const Text(
+                        "Edit",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                        softWrap: true,
+                      ).tr(),
+                    ),
+                  ),
+                ];
+              }
+          )
+      ],
+    );
   }
 
-  Future<String> getMediaDir() async{
-    Directory doc;
-    if(Platform.isAndroid){
-      doc = await getApplicationSupportDirectory();
-    }
-    else{
-      doc = await Directory.current;
-    }
-    return doc.path+"/Media";
+  Widget DiaryPageBody(){
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Container(
+        width: getDiaryWidth(context),
+        margin: EdgeInsets.all(20),
+        child: ListView.builder(
+            controller: List_Controller,
+            itemCount: 4,
+            shrinkWrap: true,
+            reverse: true,
+            itemBuilder: (context,index) {
+              switch(index){
+                case 0:
+                  return QuillEditor.basic(
+                      configurations: QuillEditorConfigurations(
+                        scrollable: false,
+                        controller: quillController,
+                        readOnly: isReadOnly,
+                        showCursor: !isReadOnly,
+                        placeholder: "Placeholder".tr(),
+                      )
+                  );
+                case 1:
+                  if(list.isEmpty) return Container();
+                  return MediaListView();
+                case 2:
+                  return Container(
+                    child: Text(
+                      getDayFormat(context).format(diary_data.day),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                case 3:
+                  return Column(
+                    children: [
+                      InkWell(
+                        child: Image.asset("assets/Emojis/Test_Emoji.png",height: 50,width: 50,),
+                        onTap: (isReadOnly) ? null: () {
+                          print("sd");
+                        },
+                      )
+                    ],
+                  );
+              }
+            }
+        ),
+      ),
+    );
   }
 
-  @override
-  void initState() {
-    MediaKit.ensureInitialized();
-    super.initState();
+  Widget MediaListView(){
+    return Stack(
+      children: [
+        Container(
+          width: getDiaryWidth(context),
+          height: getDiaryWidth(context)*2/3,
+          child: PageView.builder(
+            itemCount: diary_data.Gallery.length,
+            itemBuilder: (context,index) {
+
+              var path = list[diary_data.Gallery[index]];
+              var media;
+
+              File file = File(path!);
+              bool isNull = !file.existsSync();
+
+              if(isNull){
+
+                Timer(Duration(seconds: 3), () {
+                  setState(() {
+
+                  });
+                });
+
+                media = Stack(
+                  children: [
+                    Container(decoration: BoxDecoration(color: Theme.of(context).highlightColor),),
+                    Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  ],
+                );
+
+              }
+              else{
+
+                if(!File_Tool().isVideoFile(path)){
+
+                  media = Image(image: FileImage(file),fit: BoxFit.cover);
+
+                }
+                else{
+
+                  if(videos.containsKey(path)){
+                    media = videos[path];
+                  }
+                  else{
+                    final player = Player();
+                    final controller = VideoController(player);
+                    player.open(Media(path),play: false);
+                    media = Video(
+                        width: 480,
+                        controller: controller,
+                        controls: null,
+                        fill: Colors.transparent,
+                        filterQuality: FilterQuality.none,
+                        fit: BoxFit.cover
+                    );
+                    videos[path] = media;
+                  }
+
+                }
+
+                return KeepWidget(
+                    child:InkWell(
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
+
+                      child: Container(
+                        margin: EdgeInsets.all(10),
+                        child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: media
+                        ),
+                      ),
+                      onTap: () {
+                        onTapMedia(index);
+                      },
+                    )
+                );
+
+              }
+
+            },
+            onPageChanged: (index){
+              nowPage = index+1;
+              setState(() {
+
+              });
+            },
+          ),
+        ),
+        Align(
+          alignment: Alignment.topRight,
+          child: Container(
+            margin: EdgeInsets.all(15),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.grey
+            ),
+            child: Text(
+              " ${nowPage}/${list.length} ",
+              style: TextStyle(
+                  color: Theme.of(context).primaryColor
+              ),
+            ),
+          ),
+        )
+      ]
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget ToolBar(){
 
+    var iconShape = IconButtonData(
+      style: ButtonStyle(
+          shape: MaterialStateProperty.resolveWith<OutlinedBorder>((states) => BeveledRectangleBorder())
+      ),
+    );
 
     return QuillSimpleToolbar(
         configurations: QuillSimpleToolbarConfigurations(
-          controller: widget.controller,
-          toolbarIconAlignment: WrapAlignment.start,
-          toolbarSize: 20,
+            controller: quillController,
+            toolbarIconAlignment: WrapAlignment.start,
+            toolbarSize: 20,
 
-          showBackgroundColorButton: false,
-          showAlignmentButtons: false,
-          showCenterAlignment: false,
-          showClearFormat: false,
-          showCodeBlock: false,
-          showColorButton: false,
-          showDirection: false,
-          showDividers: false,
-          showFontFamily: false,
-          showFontSize: false,
-          showHeaderStyle: false,
-          showIndent: false,
-          showInlineCode: false,
-          showItalicButton: false,
-          showJustifyAlignment: false,
-          showLeftAlignment: false,
-          showLink: false,
-          showListBullets: false,
-          showListCheck: false,
-          showListNumbers: false,
-          showQuote: false,
-          showRedo: false,
-          showRightAlignment: false,
-          showSearchButton: false,
-          showSmallButton: false,
-          showStrikeThrough: false,
-          showSubscript: false,
-          showSuperscript: false,
-          showUnderLineButton: false,
-          showUndo: false,
+            showBackgroundColorButton: false,
+            showAlignmentButtons: false,
+            showCenterAlignment: false,
+            showClearFormat: false,
+            showCodeBlock: false,
+            showColorButton: false,
+            showDirection: false,
+            showDividers: false,
+            showFontFamily: false,
+            showFontSize: false,
+            showHeaderStyle: false,
+            showIndent: false,
+            showInlineCode: false,
+            showItalicButton: false,
+            showJustifyAlignment: false,
+            showLeftAlignment: false,
+            showLink: false,
+            showListBullets: false,
+            showListCheck: false,
+            showListNumbers: false,
+            showQuote: false,
+            showRedo: false,
+            showRightAlignment: false,
+            showSearchButton: false,
+            showSmallButton: false,
+            showStrikeThrough: false,
+            showSubscript: false,
+            showSuperscript: false,
+            showUnderLineButton: false,
+            showUndo: false,
 
-          customButtons: [
-            QuillToolbarCustomButtonOptions(
-              icon: Icon(Icons.image),
-              tooltip: "media".tr(),
-              onPressed: () {
-                _galleryButton();
-              }
-            ),
-          ],
+            customButtons: [
+              QuillToolbarCustomButtonOptions(
+                  icon: Icon(Icons.image),
+                  tooltip: "media".tr(),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context){
+                        return  const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    );
+                    MediaButton();
+                  }
+              )
+            ],
 
-          buttonOptions: QuillSimpleToolbarButtonOptions(
-            bold: QuillToolbarToggleStyleButtonOptions(
-                tooltip: "bold".tr(),
-                iconTheme: QuillIconTheme(
+            buttonOptions: QuillSimpleToolbarButtonOptions(
+              bold: QuillToolbarToggleStyleButtonOptions(
+                  tooltip: "bold".tr(),
+                  iconTheme: QuillIconTheme(
 
-                  iconButtonSelectedData: iconShape,
-                  iconButtonUnselectedData: iconShape,
+                    iconButtonSelectedData: iconShape,
+                    iconButtonUnselectedData: iconShape,
 
-                )
-            ),
-          )
+                  )
+              ),
+            )
+
         )
-
     );
   }
-}
 
- void saveOther(String other_path,String MediaPath,String fileName) async{
-  XFile other = XFile(other_path);
-  String path = "${MediaPath}/${fileName}";
-  Directory dir = Directory(MediaPath);
-  dir.create();
-  other.saveTo(path);
-}
+  Row? DiaryBottomAppBar(){
+    return isReadOnly ? null:
+    Row(
+      children: [
+        Expanded(child: ToolBar()),
+        IconButton(
+          icon: Icon(Icons.save),
+          onPressed: () {
+            isReadOnly = true;
+            save();
+            setState(() {
 
- void saveImage(String image_path,String MediaPath,String fileName) async{
-
-  XFile image = XFile(image_path);
-  var media = await img_tool.decodeImageFile(image.path);
-  var jpg = img_tool.encodeJpg(media!,quality: 75);
-
-  String path = "${MediaPath}/${fileName}";
-  Directory dir = Directory(MediaPath);
-  dir.create();
-
-  await File(path).writeAsBytes(jpg);
+            });
+          },
+        )
+      ],
+    );
+  }
 
 }
 

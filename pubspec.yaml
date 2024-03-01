@@ -45,7 +45,9 @@ dependencies:
   audio_video_progress_bar:
   flutter_map:
   flutter_map_marker_cluster:
-  flutter_media_info:   
+  flutter_media_info:
+  flutter_video_info:
+  share_plus:
 
 
   # The following adds the Cupertino Icons font to your application.

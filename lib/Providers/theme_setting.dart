@@ -51,6 +51,9 @@ class Theme_Setting with ChangeNotifier{
     colorSchemeSeed: Colors.amber,
     brightness: Brightness.dark,
     fontFamily: font,
+    scrollbarTheme: ScrollbarThemeData(
+      thickness: MaterialStateProperty.resolveWith<double>((states) => 0)
+    )
   );
 
   ThemeData get getDarkMode => darkMode();
@@ -61,6 +64,9 @@ class Theme_Setting with ChangeNotifier{
     colorSchemeSeed: Colors.amber,
     brightness: Brightness.light,
     fontFamily: font,
+    scrollbarTheme: ScrollbarThemeData(
+      thickness: MaterialStateProperty.resolveWith<double>((states) => 0)
+    )
   );
 
   ThemeData get getLightMode => lightMode();

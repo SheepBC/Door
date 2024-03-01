@@ -3,15 +3,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
-import 'package:door/Diary_Tool/diary_tool.dart';
+import 'package:door/Tools/Diary_Tool/diary_tool.dart';
 import 'package:door/Tools/file_tool.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:share_plus/share_plus.dart';
 
 class Media_ViewPage extends StatefulWidget {
   Media_ViewPage({super.key,required this.media});
@@ -45,6 +44,13 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
 
   void setGps() async{
     gps = await getGps(widget.media);
+  }
+
+  void setAppBar(){
+    showAppBar = !showAppBar;
+    setState(() {
+
+    });
   }
 
   @override
@@ -83,76 +89,25 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
 
 
     return Scaffold(
-      appBar: !showAppBar ? null:AppBar(),
-      body: InkWell(
-        highlightColor: Colors.transparent,
-        splashColor: Colors.transparent,
-        onTap: () {
-          showAppBar = !showAppBar;
-          setState(() {
-
-          });
-        },
-        onDoubleTap: () {
-          print("sd");
-        },
-        child: Media_View(path: widget.media, controller: controller),
-        /*
-        child: PageView(
-          controller: pageviewcontroller,
-          children: [
-            if(gps != null)
-              FlutterMap(
-                options: MapOptions(
-                    zoom: 17.5,
-                    center: gps,
-                    minZoom: 2,
-                    maxZoom: 18.45
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  ),
-                  const RichAttributionWidget(
-                    attributions: [
-                      TextSourceAttribution(
-                        'OpenStreetMap contributors',
-                        // onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
-                      ),
-                    ],
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                          point: gps,
-                          builder: (context) {
-                            return Icon(Icons.add);
-                          }
-                      )
-                    ],
-                  )
-                ],
+      appBar: !showAppBar ? null:AppBar(
+        actions: [
+          PopupMenuButton(
+            itemBuilder: (context) {
+              return [
+              PopupMenuItem(
+                  child: Text("공유"),
+                onTap: () async{
+                    await Share.shareXFiles([XFile(widget.media)]);
+                },
               )
-          ],
-
-          onPageChanged: (page) {
-            if(page != 0){
-              showAppBar = false;
-              showFloatingButton =true;
-            }
-            else {
-              showAppBar = true;
-              showFloatingButton = false;
-            }
-            setState(() {
-
-            });
-          },
-        ),
-        */
+              ];
+            },
+          )
+        ],
       ),
+      body: Media_View(path: widget.media, controller: controller,setAppBar: setAppBar,),
       bottomNavigationBar: (!showAppBar || isImage) ? null:BottomAppBar(
-        height: 90,
+        height: 100,
         child: Column(
           children: [
             StreamBuilder<PlayerState>(
@@ -212,16 +167,8 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
         ),
       ),
 
-      floatingActionButton: !showFloatingButton ? null:FloatingActionButton.small(
-          child: Icon(Icons.arrow_back),
-          onPressed: () {
-            pageviewcontroller.jumpToPage(0);
-          }
-      ),
-
       extendBodyBehindAppBar: true,
       extendBody: true,
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
     );
   }
 
@@ -234,10 +181,11 @@ class _Media_ViewPageState extends State<Media_ViewPage> {
 }
 
 class Media_View extends StatefulWidget {
-  Media_View({super.key,required this.path,required this.controller});
+  Media_View({super.key,required this.path,required this.controller,required this.setAppBar});
 
   String path;
   VideoController controller;
+  Function setAppBar;
 
   @override
   State<Media_View> createState() => _Media_ViewState();
@@ -296,6 +244,9 @@ class _Media_ViewState extends State<Media_View> {
     }
 
     return InkWell(
+      highlightColor: Colors.transparent,
+      splashColor: Colors.transparent,
+      hoverColor: Colors.transparent,
       child: Container(
         height: MediaQuery.of(context).size.height,
         width: double.infinity,
@@ -311,6 +262,10 @@ class _Media_ViewState extends State<Media_View> {
           ),
         ),
       ),
+
+      onTap: () async{
+        widget.setAppBar();
+      },
 
       onDoubleTap: () {
         print("object");
@@ -342,11 +297,8 @@ class _Media_ViewState extends State<Media_View> {
                                   minZoom: 2,
                                   maxZoom: 18.45
                               ),
-                              children: [
-                                TileLayer(
-                                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                ),
-                                const RichAttributionWidget(
+                              nonRotatedChildren: const [
+                                RichAttributionWidget(
                                   attributions: [
                                     TextSourceAttribution(
                                       'OpenStreetMap contributors',
@@ -354,7 +306,13 @@ class _Media_ViewState extends State<Media_View> {
                                     ),
                                   ],
                                 ),
+                              ],
+                              children: [
+                                TileLayer(
+                                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                ),
                                 MarkerLayer(
+                                  rotate: true,
                                   markers: [
                                     Marker(
                                         point: gps,
