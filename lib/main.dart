@@ -81,7 +81,10 @@ class _MyAppState extends State<MyApp> {
           return DiaryPage(day: day);
         }),
         GoRoute(path: "/mediaview",builder: (context,state) {
-          return Media_ViewPage(media: state.extra.toString());
+          Object? extra = state.extra;
+          List<dynamic> list = (extra as List);
+
+          return Media_ViewPage(index: list[0],list: list[1]);
         }),
 
         GoRoute(path: "/test",builder: (context,state) => TestPage()),

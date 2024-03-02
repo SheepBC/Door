@@ -48,6 +48,7 @@ dependencies:
   flutter_media_info:
   flutter_video_info:
   share_plus:
+  url_launcher:
 
 
   # The following adds the Cupertino Icons font to your application.

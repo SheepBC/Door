@@ -23,5 +23,9 @@
   "media": "Media",
   "Edit": "Edit",
   "delete": "Delete",
-  "memo": "Memo"
+  "memo": "Memo",
+
+  "Date": "Date",
+  "null": "None",
+  "Share": "Share"
 }

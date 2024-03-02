@@ -131,7 +131,7 @@ class _DiaryPageState extends State<DiaryPage> {
     var path = diary_data.Gallery[index];
 
     if(isReadOnly){
-      context.push("/mediaview",extra: list[path]);
+      context.push("/mediaview",extra: [index,diary_data.Gallery]);
     }
     else{
       var memo = await getMemo(path);
