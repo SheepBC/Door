@@ -1,6 +1,7 @@
 
 import 'dart:io';
 
+import 'package:door/Pages/MapPage.dart';
 import 'package:door/Pages/Settings/language_settingPage.dart';
 import 'package:door/Pages/Settings/theme_settingPage.dart';
 import 'package:door/Pages/diaryPage.dart';
@@ -86,6 +87,7 @@ class _MyAppState extends State<MyApp> {
 
           return Media_ViewPage(index: list[0],list: list[1]);
         }),
+        GoRoute(path: "/mappage",builder: (context,state) => MapPage()),
 
         GoRoute(path: "/test",builder: (context,state) => TestPage()),
       ],
