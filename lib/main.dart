@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'Pages/mainPage.dart';
 import 'Tools/custom_scrollbehavior.dart';
@@ -87,7 +88,10 @@ class _MyAppState extends State<MyApp> {
 
           return Media_ViewPage(index: list[0],list: list[1]);
         }),
-        GoRoute(path: "/mappage",builder: (context,state) => MapPage()),
+        GoRoute(path: "/mappage",builder: (context,state) {
+          if(state.extra == null) return MapPage();
+          return MapPage(center: (state.extra! as LatLng));
+        }),
 
         GoRoute(path: "/test",builder: (context,state) => TestPage()),
       ],

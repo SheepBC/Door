@@ -149,8 +149,8 @@ class _Media_ViewState extends State<Media_View> {
     launchUrl(Uri.parse('https://openstreetmap.org/copyright'));
   }
 
-  static void goMap(BuildContext context){
-    context.push("/mappage");
+  static void goMap(BuildContext context,var gps){
+    context.push("/mappage",extra: gps);
   }
 
 
@@ -371,7 +371,7 @@ class _Media_ViewState extends State<Media_View> {
                           //splashColor: Colors.transparent,
                           //highlightColor: Colors.transparent,
                           borderRadius: BorderRadius.all(Radius.circular(10)),
-                          onTap: () =>goMap(context),
+                          onTap: () =>goMap(context,gps),
                           child: Container(
                             margin: EdgeInsets.all(5),
                             padding: EdgeInsets.all(2.5),
@@ -392,9 +392,7 @@ class _Media_ViewState extends State<Media_View> {
                           markers: [
                             Marker(
                                 point: gps,
-                                builder: (context) {
-                                  return const Icon(Icons.location_on,color: Colors.red,);
-                                }
+                                child: Icon(Icons.location_on,color: Colors.red,)
                             )
                           ],
                         )

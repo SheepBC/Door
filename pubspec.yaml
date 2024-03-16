@@ -49,6 +49,7 @@ dependencies:
   flutter_video_info:
   share_plus:
   url_launcher:
+  geolocator:
 
 
   # The following adds the Cupertino Icons font to your application.

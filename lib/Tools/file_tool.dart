@@ -96,6 +96,7 @@ Future<LatLng?> getGps(String path) async{
     var EW = image?.exif.gpsIfd[3].toString();
     var lng = image?.exif.gpsIfd[4].toString().replaceAll("[", "").replaceAll("]", "");
     //print("${lat}@${lng}@${NS!}@${EW}");
+    if(image == null) return null;
     if(image!.exif.gpsIfd.values.isEmpty) return null;
     var result = LatLng(toGps(lat!)*getMark(NS!), toGps(lng!)*getMark(EW!));
     if(result.latitude.toString() == "NaN") return null;
@@ -145,6 +146,5 @@ double toGps(String s){
 Future<String> getDay(String path) async{
   var file = File(path);
   file.statSync().modified;
-  print(file.statSync().modified);
   return file.statSync().modified.toString();
 }

@@ -1,11 +1,7 @@
 
-import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:door/Providers/setting.dart';
-import 'package:door/Providers/theme_setting.dart';
-import 'package:door/Tools/file_tool.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:door/Tools/custom_scrollbehavior.dart';
 import 'package:table_calendar/table_calendar.dart';
+
+import '../Tools/Diary_Tool/diary_tool.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -53,10 +51,24 @@ class _MainPageState extends State<MainPage> {
     return size.width;
   }
 
+  void getDiaryDoc() async{
+    Directory doc;
+    if(Platform.isAndroid){
+      doc = await getApplicationSupportDirectory();
+    }
+    else{
+      doc = await Directory.current;
+    }
+    setState(() {
+    calender = Calender(change,doc: doc.path);
+    });
+  }
+
 
   @override
   void initState() {
     calender = Calender(change);
+    getDiaryDoc();
     super.initState();
   }
 
@@ -76,6 +88,20 @@ class _MainPageState extends State<MainPage> {
                 icon: Icon(Icons.settings)
             )
           ],
+          leading: PopupMenuButton(
+              position: PopupMenuPosition.under,
+              tooltip: "",
+              itemBuilder: (context) {
+                return [
+                  PopupMenuItem(
+                      child: Text("지도"),
+                    onTap: () {
+                        context.push("/mappage");
+                    },
+                  )
+                ];
+              }
+          ),
         ),
         body: Center(
           child: Column(
@@ -143,10 +169,11 @@ class _MainPageState extends State<MainPage> {
 }
 
 class Calender extends StatefulWidget {
-  Calender(this.onChange, {super.key});
+  Calender(this.onChange, {super.key, this.doc});
 
   var focusDay = DateTime.now();
   final VoidCallback onChange;
+  String? doc;
 
   @override
   State<Calender> createState() => _CalenderState();
@@ -196,7 +223,18 @@ class _CalenderState extends State<Calender> {
           calendarBuilders: CalendarBuilders(
               defaultBuilder: (context,day,_) {
 
+                var decoration = BoxDecoration();
+
                 var theme = Theme.of(context);
+
+                if(widget.doc != null){
+                  if(isWrite(day,widget.doc!)){
+                    decoration = const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle
+                    );
+                  }
+                }
 
                 var color = theme.textTheme.titleSmall!.color;
                 if (day.isAfter(DateTime.now())) color = theme.disabledColor;
@@ -209,6 +247,7 @@ class _CalenderState extends State<Calender> {
                 return Container(
                   width: 40,
                   child: Center(child: Text("${day.day}",style: TextStyle(color: color,fontSize: 20),textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: !isNanum))),
+                  decoration: decoration,
                 );
               },
             todayBuilder: (context,day,_) {
