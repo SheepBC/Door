@@ -430,7 +430,8 @@ class _Media_ViewState extends State<Media_View> {
 
 Future<List<dynamic>> loadInfo(String path) async{
   List<dynamic> list =[null,null,null];
-  list[0] = await getGps(path);
+  var token = RootIsolateToken.instance;
+  list[0] = await getGps(path,token!);
   list[1] = await getDay(path);
   list[2] = await getMemo(path);
   return list;

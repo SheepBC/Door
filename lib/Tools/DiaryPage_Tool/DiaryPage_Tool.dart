@@ -30,6 +30,9 @@ void saveImage(String image_path,String MediaPath,String fileName) async{
 
   XFile image = XFile(image_path);
   var media = await img_tool.decodeImageFile(image.path);
+  if(media == null){
+    image.saveTo(fileName);
+  }
   var jpg = img_tool.encodeJpg(media!,quality: 75);
 
   String path = "${MediaPath}/${fileName}";
@@ -49,4 +52,14 @@ Future<String> getMediaDir() async{
     doc = await Directory.current;
   }
   return doc.path+"/Media";
+}
+
+bool canUseImage(String path){
+  String extension = path.split('.').last.toLowerCase();
+
+  // 비디오 파일 확장자 목록
+  List<String> videoExtensions = ['jpg','png','bmp','tiff','tga','pvr','ico']; // 필요에 따라 확장자 추가
+
+  // 비디오 파일인지 여부 확인
+  return videoExtensions.contains(extension);
 }

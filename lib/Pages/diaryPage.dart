@@ -96,12 +96,12 @@ class _DiaryPageState extends State<DiaryPage> {
     var medias =await image_Picker.pickMultipleMedia();
     medias.forEach((element) async {
       var msg = [element.path, await getMediaDir(), "null"];
-      if (File_Tool().isVideoFile(element.path)) {
+      if(canUseImage(element.path)){
         msg[2] = "${DateTime
             .now()
-            .microsecondsSinceEpoch}${Random().nextInt(10000)}${element.name}";
-        await compute((message) =>
-            saveOther(message[0], message[1], message[2]), msg);
+            .microsecondsSinceEpoch}${Random().nextInt(10000)}.jpg";
+        compute((message) => saveImage(message[0], message[1], message[2]),
+            msg);
       }
       else if (File_Tool().isGif(element.path)) {
         msg[2] = "${DateTime
@@ -113,10 +113,11 @@ class _DiaryPageState extends State<DiaryPage> {
       else {
         msg[2] = "${DateTime
             .now()
-            .microsecondsSinceEpoch}${Random().nextInt(10000)}.jpg";
-        compute((message) => saveImage(message[0], message[1], message[2]),
-            msg);
+            .microsecondsSinceEpoch}${Random().nextInt(10000)}${element.name}";
+        await compute((message) =>
+            saveOther(message[0], message[1], message[2]), msg);
       }
+
       var path = "${msg[1]}/${msg[2]}";
       list[path] = element.path;
       diary_data.Gallery.add(path);
@@ -331,7 +332,6 @@ class _DiaryPageState extends State<DiaryPage> {
               bool isNull = !file.existsSync();
 
               if(isNull){
-
                 Timer(Duration(seconds: 3), () {
                   setState(() {
 
@@ -352,7 +352,20 @@ class _DiaryPageState extends State<DiaryPage> {
 
                 if(!File_Tool().isVideoFile(path)){
 
-                  media = Image(image: FileImage(file),fit: BoxFit.cover);
+                  media = Image(
+                    image: FileImage(file),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context,obj,d) {
+                      return Stack(
+                        children: [
+                          Container(decoration: BoxDecoration(color: Theme.of(context).highlightColor),),
+                          Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        ],
+                      );
+                    },
+                  );
 
                 }
                 else{

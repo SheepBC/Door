@@ -1,5 +1,6 @@
 
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:flutter_video_info/flutter_video_info.dart';
 import 'package:image/image.dart';
 import 'package:latlong2/latlong.dart';
@@ -53,7 +54,7 @@ class File_Tool {
 
 }
 
-Future<LatLng?> getGps(String path) async{
+Future<LatLng?> getGps(String path,RootIsolateToken token) async{
   if(File_Tool().isVideoFile(path)){
     if(Platform.isWindows){
       final mediainfo = Mediainfo();
@@ -68,8 +69,9 @@ Future<LatLng?> getGps(String path) async{
       return LatLng(double.parse(numbers[0]), double.parse(numbers[1]));
     }
     else if(Platform.isAndroid){
+      print(path);
+      BackgroundIsolateBinaryMessenger.ensureInitialized(token);
       await Permission.accessMediaLocation.request();
-
       final videoInfo = FlutterVideoInfo();
       var infos = await videoInfo.getVideoInfo(path);
       var info = infos!.location;
@@ -88,6 +90,7 @@ Future<LatLng?> getGps(String path) async{
     return null;
   }
   else {
+    if(!File(path).existsSync()) return null;
     var image = await decodeImageFile(path);
     //print("=================================================================================${image?.exif.gpsIfd.values.length}");
     //print("=================================================================================${image?.exif.gpsIfd.values}");
@@ -98,10 +101,11 @@ Future<LatLng?> getGps(String path) async{
     //print("${lat}@${lng}@${NS!}@${EW}");
     if(image == null) return null;
     if(image!.exif.gpsIfd.values.isEmpty) return null;
+    if(lat == "null" || lng == "null") return null;
     var result = LatLng(toGps(lat!)*getMark(NS!), toGps(lng!)*getMark(EW!));
     if(result.latitude.toString() == "NaN") return null;
     return result;
-
+  ///data/user/0/BC.Sheep.door/files/Media/17106559659810594109.jpg
   }
 
   return LatLng(10, 10);
@@ -123,7 +127,6 @@ double toGps(String s){
   double result = 0.0;
   int index = 0;
   list.forEach((element) {
-
     var divide = element.split("/");
     var num = double.parse(divide[0])/double.parse(divide[1]);
     switch(index){

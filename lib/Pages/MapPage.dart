@@ -1,14 +1,20 @@
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:door/Tools/Diary_Tool/diary_data.dart';
 import 'package:door/Tools/file_tool.dart';
+import 'package:door/Tools/other_tool.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:door/Tools/Diary_Tool/diary_tool.dart';
 
@@ -48,8 +54,8 @@ class _MapPageState extends State<MapPage> {
     //context.pop();
   }
 
-  void markLoad(){
-    var st = getMarkers();
+  void markLoad(BuildContext context){
+    var st = getMarkers(context);
     st.listen((event) {
       if(event != null){
         marks = event;
@@ -66,19 +72,15 @@ class _MapPageState extends State<MapPage> {
 
   @override
   void initState() {
-    markLoad();
+    markLoad(context);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {load();});
+    MediaKit.ensureInitialized();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: IconButton(icon: Icon(Icons.add),onPressed: () {
-        setState(() {
-
-        }); 
-      },),),
       body: FlutterMap(
         mapController: mapController,
         options: MapOptions(
@@ -124,10 +126,25 @@ class _MapPageState extends State<MapPage> {
                     markers: marks,
                     disableClusteringAtZoom: 18,
                     maxClusterRadius: 50,
+                    size: Size(50,50),
                     builder: (context,marks){
                       return Container(
-                        child: Text("${marks.length}"),
-                        decoration: BoxDecoration(color: Colors.blue),
+                        child: Stack(
+                          children: [
+                            marks[0].child,
+                            Container(
+                              width: 50,
+                              height: 50,
+                              child: Center(child: Text("${marks.length}",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),),
+                              decoration: BoxDecoration(
+                                  color: Colors.black45,
+                                  borderRadius: BorderRadius.circular(10)
+                              ),
+                            )
+                          ],
+                        ),
+                        width: 50,
+                        height: 50,
                       );
                     }
                 )
@@ -140,7 +157,7 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
-Stream<List<Marker>?> getMarkers() async*{
+Stream<List<Marker>?> getMarkers(BuildContext context) async*{
   var list = await getDiaryAll();
 
   List<Marker> marks = [];
@@ -148,11 +165,15 @@ Stream<List<Marker>?> getMarkers() async*{
 
   for(Diary_Data element in list){
     for(String path in element.Gallery){
-      LatLng? point = await compute((message) => getGps(path), path);
+      var token = RootIsolateToken.instance;
+      BackgroundIsolateBinaryMessenger.ensureInitialized(token!);
+      LatLng? point = await compute((message) => getGps(path,token), path);
       if(point != null){
         marks.add(Marker(
+            width: 50,
+            height: 50,
             point: point,
-            child: Icon(Icons.ac_unit,color: Colors.red)
+            child: getMarkChild(path,context)
         ));
       }
     }
@@ -165,6 +186,61 @@ Stream<List<Marker>?> getMarkers() async*{
   yield marks;
   print("Closed");
   yield null;
+
+}
+
+Widget getMarkChild(String path,BuildContext context){
+
+  Widget media = Container();
+
+  if(File_Tool().isVideoFile(path)){
+    final player = Player();
+    final controller = VideoController(player);
+    player.open(Media(path),play: false);
+    media = Video(
+        width: 40,
+        height: 40,
+        controller: controller,
+        controls: null,
+        fit: BoxFit.cover,
+    );
+  }
+  else{
+    media = Image(
+      width: 40,
+      height: 40,
+      image: FileImage(File(path)),
+      fit: BoxFit.cover,
+    );
+  }
+
+  return KeepWidget(
+      child: InkWell(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+
+        child: Container(
+          child: Center(
+            child: ClipRRect(
+              child: media,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+
+          decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(10)
+          ),
+        ),
+
+        onTap: (){
+          context.push("/mediaview",extra: [0,[path]]);
+        },
+
+      )
+  );
+
 
 }
 
