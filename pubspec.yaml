@@ -35,7 +35,6 @@ dependencies:
   easy_localization:
   table_calendar:
   path_provider:
-  flutter_quill:
   image_picker:
   image:
   media_kit:
@@ -44,12 +43,15 @@ dependencies:
   permission_handler:
   audio_video_progress_bar:
   flutter_map:
-  flutter_map_marker_cluster:
   flutter_media_info:
   flutter_video_info:
   share_plus:
   url_launcher:
   geolocator:
+  exif:
+  flutter_map_supercluster:
+  flutter_map_marker_cluster:
+  flutter_quill:
 
 
   # The following adds the Cupertino Icons font to your application.

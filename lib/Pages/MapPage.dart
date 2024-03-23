@@ -30,7 +30,7 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
 
   var mapController = MapController();
-  List<Marker> marks = [];
+  List<customMark> marks = [];
 
   var allLoad = false;
 
@@ -124,7 +124,7 @@ class _MapPageState extends State<MapPage> {
             MarkerClusterLayerWidget(
                 options: MarkerClusterLayerOptions(
                     markers: marks,
-                    disableClusteringAtZoom: 18,
+                    disableClusteringAtZoom: 17,
                     maxClusterRadius: 50,
                     size: Size(50,50),
                     builder: (context,marks){
@@ -146,6 +146,14 @@ class _MapPageState extends State<MapPage> {
                         width: 50,
                         height: 50,
                       );
+                    },
+                    spiderfyCluster: false,
+                    onClusterTap: (node) {
+                      List<String> paths = [];
+                      node.markers.forEach((element) {
+                        paths.add((element.marker as customMark).path);
+                      });
+                      context.push("/mediaview",extra: [0,paths]);
                     }
                 )
             ),
@@ -157,10 +165,10 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
-Stream<List<Marker>?> getMarkers(BuildContext context) async*{
+Stream<List<customMark>?> getMarkers(BuildContext context) async*{
   var list = await getDiaryAll();
-
-  List<Marker> marks = [];
+  print("start: ${DateTime.now()}");
+  List<customMark> marks = [];
   int last_index = 0;
 
   for(Diary_Data element in list){
@@ -169,22 +177,24 @@ Stream<List<Marker>?> getMarkers(BuildContext context) async*{
       BackgroundIsolateBinaryMessenger.ensureInitialized(token!);
       LatLng? point = await compute((message) => getGps(path,token), path);
       if(point != null){
-        marks.add(Marker(
+        marks.add(customMark(
             width: 50,
             height: 50,
             point: point,
-            child: getMarkChild(path,context)
+            child: getMarkChild(path,context),
+            path: path
         ));
       }
     }
     print("${marks.length},${last_index}");
-    if(marks.length-last_index >=5) {
+    if(marks.length-last_index >=2) {
       yield marks;
       last_index = marks.length;
     }
   }
   yield marks;
   print("Closed");
+  print("end: ${DateTime.now()}");
   yield null;
 
 }
@@ -240,7 +250,26 @@ Widget getMarkChild(String path,BuildContext context){
 
       )
   );
+  /*
+  기존 start: 2024-03-23 19:49:59.290798
+      end: 2024-03-23 19:52:01.805690
+      약 2분
 
+  바꾼것 start: 2024-03-23 20:14:32.395400
+        end: 2024-03-23 20:15:20.017111
+        약 1분
+   */
+
+}
+
+class customMark extends Marker{
+
+  customMark({required super.point, required super.child,required super.width,required super.height,required this.path});
+
+  double get width => super.width;
+  double get hight => super.width;
+
+  String path;
 
 }
 

@@ -1,5 +1,6 @@
 
 import 'dart:io';
+import 'package:exif/exif.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_video_info/flutter_video_info.dart';
 import 'package:image/image.dart';
@@ -89,8 +90,26 @@ Future<LatLng?> getGps(String path,RootIsolateToken token) async{
     }
     return null;
   }
-  else {
+  else{
     if(!File(path).existsSync()) return null;
+
+  var bytes = File(path).readAsBytesSync();
+  var data = await readExifFromBytes(bytes);
+
+  if(data.isEmpty) return null;
+
+  var lat = data["GPS GPSLatitude"].toString().replaceAll("[", "").replaceAll("]", "");
+  var lng = data["GPS GPSLongitude"].toString().replaceAll("[", "").replaceAll("]", "");
+
+  var NS = data["GPS GPSLatitudeRef"].toString();
+  var EW = data["GPS GPSLongitudeRef"].toString();
+
+  if(lat == "null" || lng == "null") return null;
+  var result = LatLng(toGps(lat)*getMark(NS), toGps(lng)*getMark(EW));
+  if(result.latitude.toString() == "NaN") return null;
+  return result;
+
+    /*
     var image = await decodeImageFile(path);
     //print("=================================================================================${image?.exif.gpsIfd.values.length}");
     //print("=================================================================================${image?.exif.gpsIfd.values}");
@@ -106,10 +125,10 @@ Future<LatLng?> getGps(String path,RootIsolateToken token) async{
     if(result.latitude.toString() == "NaN") return null;
     return result;
   ///data/user/0/BC.Sheep.door/files/Media/17106559659810594109.jpg
+
+     */
   }
-
   return LatLng(10, 10);
-
 }
 int getMark(String s){
   var mark = 1;
@@ -128,7 +147,9 @@ double toGps(String s){
   int index = 0;
   list.forEach((element) {
     var divide = element.split("/");
-    var num = double.parse(divide[0])/double.parse(divide[1]);
+    var num = double.parse(divide[0]);
+    if(element.contains("/")) num = double.parse(divide[0])/double.parse(divide[1]);
+
     switch(index){
       case 0:
         result += num;

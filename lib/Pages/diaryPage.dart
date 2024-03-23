@@ -208,11 +208,16 @@ class _DiaryPageState extends State<DiaryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Base(
-        child: Scaffold(
-          appBar: DiaryPageAppBar(),
-          body: DiaryPageBody(),
-          bottomNavigationBar: DiaryBottomAppBar(),
+    return QuillProvider(
+        configurations: QuillConfigurations(
+          controller: quillController
+        ),
+        child: Base(
+            child: Scaffold(
+              appBar: DiaryPageAppBar(),
+              body: DiaryPageBody(),
+              bottomNavigationBar: DiaryBottomAppBar(),
+            )
         )
     );
   }
@@ -281,7 +286,7 @@ class _DiaryPageState extends State<DiaryPage> {
                   return QuillEditor.basic(
                       configurations: QuillEditorConfigurations(
                         scrollable: false,
-                        controller: quillController,
+                        //controller: quillController,
                         readOnly: isReadOnly,
                         showCursor: !isReadOnly,
                         placeholder: "Placeholder".tr(),
@@ -442,55 +447,51 @@ class _DiaryPageState extends State<DiaryPage> {
 
   Widget ToolBar(){
 
-    var iconShape = IconButtonData(
-      style: ButtonStyle(
-          shape: MaterialStateProperty.resolveWith<OutlinedBorder>((states) => BeveledRectangleBorder())
-      ),
-    );
 
-    return QuillSimpleToolbar(
-        configurations: QuillSimpleToolbarConfigurations(
-            controller: quillController,
-            toolbarIconAlignment: WrapAlignment.start,
-            toolbarSize: 20,
+    return QuillToolbar(
+      configurations: QuillToolbarConfigurations(
 
-            showBackgroundColorButton: false,
-            showAlignmentButtons: false,
-            showCenterAlignment: false,
-            showClearFormat: false,
-            showCodeBlock: false,
-            showColorButton: false,
-            showDirection: false,
-            showDividers: false,
-            showFontFamily: false,
-            showFontSize: false,
-            showHeaderStyle: false,
-            showIndent: false,
-            showInlineCode: false,
-            showItalicButton: false,
-            showJustifyAlignment: false,
-            showLeftAlignment: false,
-            showLink: false,
-            showListBullets: false,
-            showListCheck: false,
-            showListNumbers: false,
-            showQuote: false,
-            showRedo: false,
-            showRightAlignment: false,
-            showSearchButton: false,
-            showSmallButton: false,
-            showStrikeThrough: false,
-            showSubscript: false,
-            showSuperscript: false,
-            showUnderLineButton: false,
-            showUndo: false,
+        //controller: quillController,
+        toolbarIconAlignment: WrapAlignment.start,
+        toolbarSize: 20,
 
-            customButtons: [
-              QuillToolbarCustomButtonOptions(
-                  icon: Icon(Icons.image),
-                  tooltip: "media".tr(),
-                  onPressed: () {
-                    showDialog(
+        showBackgroundColorButton: false,
+        showAlignmentButtons: false,
+        showCenterAlignment: false,
+        showClearFormat: false,
+        showCodeBlock: false,
+        showColorButton: false,
+        showDirection: false,
+        showDividers: false,
+        showFontFamily: false,
+        showFontSize: false,
+        showHeaderStyle: false,
+        showIndent: false,
+        showInlineCode: false,
+        showItalicButton: false,
+        showJustifyAlignment: false,
+        showLeftAlignment: false,
+        showLink: false,
+        showListBullets: false,
+        showListCheck: false,
+        showListNumbers: false,
+        showQuote: false,
+        showRedo: false,
+        showRightAlignment: false,
+        showSearchButton: false,
+        showSmallButton: false,
+        showStrikeThrough: false,
+        showSubscript: false,
+        showSuperscript: false,
+        showUnderLineButton: false,
+        showUndo: false,
+
+          customButtons: [
+            QuillToolbarCustomButtonOptions(
+                icon: Icon(Icons.image),
+                tooltip: "media".tr(),
+                onPressed: () {
+                  showDialog(
                       context: context,
                       barrierDismissible: false,
                       builder: (context){
@@ -498,25 +499,24 @@ class _DiaryPageState extends State<DiaryPage> {
                           child: CircularProgressIndicator(),
                         );
                       }
-                    );
-                    MediaButton();
-                  }
-              )
-            ],
-
-            buttonOptions: QuillSimpleToolbarButtonOptions(
-              bold: QuillToolbarToggleStyleButtonOptions(
-                  tooltip: "bold".tr(),
-                  iconTheme: QuillIconTheme(
-
-                    iconButtonSelectedData: iconShape,
-                    iconButtonUnselectedData: iconShape,
-
-                  )
-              ),
+                  );
+                  MediaButton();
+                }
             )
+          ],
 
-        )
+          buttonOptions: QuillToolbarButtonOptions(
+            bold: QuillToolbarToggleStyleButtonOptions(
+                tooltip: "bold".tr(),
+                iconTheme: QuillIconTheme(
+                  iconSelectedColor: Theme.of(context).primaryColor,
+                  iconSelectedFillColor: Theme.of(context).colorScheme.primary,
+                  borderRadius: 0
+                )
+            ),
+          )
+
+      ),
     );
   }
 
