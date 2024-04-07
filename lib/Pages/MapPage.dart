@@ -1,8 +1,10 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:door/Tools/Diary_Tool/diary_data.dart';
+import 'package:door/Tools/custom_Marker_Layer.dart';
 import 'package:door/Tools/file_tool.dart';
 import 'package:door/Tools/other_tool.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:flutter_map_supercluster/flutter_map_supercluster.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
@@ -32,7 +35,8 @@ class _MapPageState extends State<MapPage> {
   var mapController = MapController();
   List<customMark> marks = [];
 
-  var allLoad = false;
+  var isChange = false;
+  var last_Zoom = 17.0;
 
   void load() async{
     if(widget.center != null) {
@@ -51,7 +55,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   static void goBack(BuildContext context){
-    //context.pop();
+    context.pop();
   }
 
   void markLoad(BuildContext context){
@@ -62,7 +66,6 @@ class _MapPageState extends State<MapPage> {
       }
       else{
         print("zz");
-        allLoad = true;
       }
       setState(() {
 
@@ -78,6 +81,8 @@ class _MapPageState extends State<MapPage> {
     super.initState();
   }
 
+  var con = SuperclusterMutableController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,6 +92,10 @@ class _MapPageState extends State<MapPage> {
           initialZoom: 17,
             minZoom: 2,
             maxZoom: 19,
+          onPositionChanged: (position,b) {
+            if(last_Zoom != mapController.zoom) isChange = true;
+            last_Zoom = mapController.zoom;
+          }
         ),
         nonRotatedChildren: [
           const RichAttributionWidget(
@@ -120,50 +129,94 @@ class _MapPageState extends State<MapPage> {
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           ),
-          if(allLoad)
-            MarkerClusterLayerWidget(
-                options: MarkerClusterLayerOptions(
-                    markers: marks,
-                    disableClusteringAtZoom: 17,
-                    maxClusterRadius: 50,
-                    size: Size(50,50),
-                    builder: (context,marks){
-                      return Container(
-                        child: Stack(
-                          children: [
-                            marks[0].child,
-                            Container(
-                              width: 50,
-                              height: 50,
-                              child: Center(child: Text("${marks.length}",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),),
-                              decoration: BoxDecoration(
-                                  color: Colors.black45,
-                                  borderRadius: BorderRadius.circular(10)
-                              ),
-                            )
-                          ],
-                        ),
+          CustomMarkLayer(
+              markers: marks,
+              max_Distance: 50,
+              height: 50,
+              width: 50,
+              build: (context,list){
+
+                return InkWell(
+                  child: Stack(
+                    children: [
+                      list[0].child,
+                      Container(
                         width: 50,
                         height: 50,
-                      );
-                    },
-                    spiderfyCluster: false,
-                    onClusterTap: (node) {
-                      List<String> paths = [];
-                      node.markers.forEach((element) {
-                        paths.add((element.marker as customMark).path);
-                      });
-                      context.push("/mediaview",extra: [0,paths]);
+                        decoration: BoxDecoration(
+                            color: Colors.black45,
+                            borderRadius: BorderRadius.circular(10)
+                        ),
+                        child: Center(child: Text("${list.length}",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),),
+                      )
+                    ],
+                  ),
+                  onTap: () {
+                    List<String> paths = [];
+                    for(var mark in list){
+                      var cMark = mark as customMark;
+                      paths.add(cMark.path);
                     }
-                )
-            ),
-          if(!allLoad)
-            MarkerLayer(markers: marks)
+                    context.push("/mediaview",extra: [0,paths]);
+                  },
+                );
+              }
+          )
         ],
       ),
     );
   }
+
+
+
 }
+
+Widget markers(BuildContext context,List<Marker> marks){
+  print("change!!!!!!");
+
+  var option = MarkerClusterLayerOptions(
+      markers: marks,
+      disableClusteringAtZoom: 20,
+      maxClusterRadius: 50,
+      size: Size(50,50),
+      builder: (context,marks){
+        return SizedBox(
+          width: 50,
+          height: 50,
+          child: Stack(
+            children: [
+              marks[0].child,
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(10)
+                ),
+                child: Center(child: Text("${marks.length}",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),),
+              )
+            ],
+          ),
+        );
+      },
+      spiderfyCluster: false,
+      onClusterTap: (node) {
+        List<String> paths = [];
+        node.markers.forEach((element) {
+          paths.add((element.marker as customMark).path);
+        });
+        context.push("/mediaview",extra: [0,paths]);
+      }
+  );
+
+  print(option.markers.length);
+
+  var result = MarkerClusterLayerWidget(options: option);
+  print(result.options.markers.length);
+
+  return result;
+}
+
 
 Stream<List<customMark>?> getMarkers(BuildContext context) async*{
   var list = await getDiaryAll();
@@ -272,5 +325,35 @@ class customMark extends Marker{
   String path;
 
 }
+
+class testData extends ClusterDataBase{
+
+  var per = 32;// 1당
+
+  List<Marker> marks = [];
+
+  double zoom;
+
+  testData(this.marks,this.zoom);
+
+  @override
+  ClusterDataBase combine(covariant ClusterDataBase data) {
+    var other = data as testData;
+    var list = other.marks;
+
+    var one = list[0];
+    var one_point = CrsSimple().latLngToPoint(one.point, zoom);
+    var other_point = CrsSimple().latLngToPoint(marks[0].point, zoom);
+
+    var distance = sqrt(pow(one_point.x-other_point.x,2)+pow(one_point.y-other_point.y,2));
+    //print(distance);
+    if(distance <= per*200) list.addAll(marks);
+    list = list.toSet().toList();
+    return testData(list,zoom);
+
+  }
+
+}
+
 
 
