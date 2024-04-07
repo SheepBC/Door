@@ -11,8 +11,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
-import 'package:flutter_map_supercluster/flutter_map_supercluster.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
@@ -80,8 +78,6 @@ class _MapPageState extends State<MapPage> {
     MediaKit.ensureInitialized();
     super.initState();
   }
-
-  var con = SuperclusterMutableController();
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +157,19 @@ class _MapPageState extends State<MapPage> {
                   },
                 );
               }
+          ),
+          TextButton(
+              onPressed: () {
+                showDatePicker(
+                    context: context,
+                    firstDate: DateTime(2011),
+                    lastDate: DateTime.now(),
+                    selectableDayPredicate: (day) {
+                      return true;
+                    },
+                ).then((value) => print(value));
+              },
+              child: Text("ss")
           )
         ],
       ),
@@ -169,52 +178,6 @@ class _MapPageState extends State<MapPage> {
 
 
 
-}
-
-Widget markers(BuildContext context,List<Marker> marks){
-  print("change!!!!!!");
-
-  var option = MarkerClusterLayerOptions(
-      markers: marks,
-      disableClusteringAtZoom: 20,
-      maxClusterRadius: 50,
-      size: Size(50,50),
-      builder: (context,marks){
-        return SizedBox(
-          width: 50,
-          height: 50,
-          child: Stack(
-            children: [
-              marks[0].child,
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                    color: Colors.black45,
-                    borderRadius: BorderRadius.circular(10)
-                ),
-                child: Center(child: Text("${marks.length}",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),),
-              )
-            ],
-          ),
-        );
-      },
-      spiderfyCluster: false,
-      onClusterTap: (node) {
-        List<String> paths = [];
-        node.markers.forEach((element) {
-          paths.add((element.marker as customMark).path);
-        });
-        context.push("/mediaview",extra: [0,paths]);
-      }
-  );
-
-  print(option.markers.length);
-
-  var result = MarkerClusterLayerWidget(options: option);
-  print(result.options.markers.length);
-
-  return result;
 }
 
 
@@ -311,6 +274,8 @@ Widget getMarkChild(String path,BuildContext context){
   바꾼것 start: 2024-03-23 20:14:32.395400
         end: 2024-03-23 20:15:20.017111
         약 1분
+  2차 바꾼것  start: 2024-04-07 17:30:46.749728
+            end: 2024-04-07 17:31:33.595981
    */
 
 }
@@ -326,34 +291,6 @@ class customMark extends Marker{
 
 }
 
-class testData extends ClusterDataBase{
-
-  var per = 32;// 1당
-
-  List<Marker> marks = [];
-
-  double zoom;
-
-  testData(this.marks,this.zoom);
-
-  @override
-  ClusterDataBase combine(covariant ClusterDataBase data) {
-    var other = data as testData;
-    var list = other.marks;
-
-    var one = list[0];
-    var one_point = CrsSimple().latLngToPoint(one.point, zoom);
-    var other_point = CrsSimple().latLngToPoint(marks[0].point, zoom);
-
-    var distance = sqrt(pow(one_point.x-other_point.x,2)+pow(one_point.y-other_point.y,2));
-    //print(distance);
-    if(distance <= per*200) list.addAll(marks);
-    list = list.toSet().toList();
-    return testData(list,zoom);
-
-  }
-
-}
 
 
 

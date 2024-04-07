@@ -13,6 +13,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:month_year_picker/month_year_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -99,6 +100,10 @@ class _MyAppState extends State<MyApp> {
 
     return Consumer<Setting>(
         builder: (context,setting,widget) {
+
+          var locallist = context.localizationDelegates;
+          locallist.add(MonthYearPickerLocalizations.delegate);
+
           return MaterialApp.router(
             //페이지 이동
             routerConfig: goRoute,
@@ -109,7 +114,7 @@ class _MyAppState extends State<MyApp> {
             theme: setting.theme.getLightMode,
             builder: (context,widget) => setting.theme.getMediaQuery(context, widget!),
             //다국화
-            localizationsDelegates: context.localizationDelegates,
+            localizationsDelegates: locallist,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
 

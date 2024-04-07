@@ -49,8 +49,7 @@ dependencies:
   url_launcher:
   geolocator:
   exif:
-  flutter_map_supercluster:
-  flutter_map_marker_cluster:
+  month_year_picker:
   flutter_quill:
 
 

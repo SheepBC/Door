@@ -2,9 +2,11 @@
 import 'dart:io';
 
 import 'package:door/Providers/setting.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:month_year_picker/month_year_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:door/Tools/custom_scrollbehavior.dart';
@@ -22,6 +24,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
 
   late Calender calender;
+  var CalenderController = PageController();
 
   List<String> months = [
     'Jan',
@@ -60,14 +63,14 @@ class _MainPageState extends State<MainPage> {
       doc = await Directory.current;
     }
     setState(() {
-    calender = Calender(change,doc: doc.path);
+    calender = Calender(change,doc: doc.path,controller: CalenderController,);
     });
   }
 
 
   @override
   void initState() {
-    calender = Calender(change);
+    calender = Calender(change,controller: CalenderController);
     getDiaryDoc();
     super.initState();
   }
@@ -78,7 +81,22 @@ class _MainPageState extends State<MainPage> {
       return Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title:Text(calender.focusDay.year.toString()),
+          title:TextButton(
+            child: Text(calender.focusDay.year.toString(),style: Theme.of(context).textTheme.titleLarge,),
+            onPressed: () {
+              showMonthYearPicker(
+                  context: context,
+                  initialDate: calender.focusDay,
+                  firstDate: DateTime(0),
+                  lastDate: DateTime.now(),
+              ).then((value) {
+                CalenderController.jumpToPage(value!.year*12+value.month);
+                setState(() {
+
+                });
+              });
+            },
+          ),
           centerTitle: true,
           actions: [
             IconButton(
@@ -169,11 +187,12 @@ class _MainPageState extends State<MainPage> {
 }
 
 class Calender extends StatefulWidget {
-  Calender(this.onChange, {super.key, this.doc});
+  Calender(this.onChange, {super.key, this.doc,required this.controller});
 
   var focusDay = DateTime.now();
   final VoidCallback onChange;
   String? doc;
+  PageController controller;
 
   @override
   State<Calender> createState() => _CalenderState();
@@ -181,11 +200,10 @@ class Calender extends StatefulWidget {
 
 class _CalenderState extends State<Calender> {
 
-  late PageController controller;
 
   @override
   void initState() {
-    controller = PageController(initialPage: widget.focusDay.year*12+widget.focusDay.month);
+    widget.controller = PageController(initialPage: widget.focusDay.year*12+widget.focusDay.month);
     super.initState();
   }
 
@@ -193,7 +211,7 @@ class _CalenderState extends State<Calender> {
   Widget build(BuildContext context) {
     return PageView.builder(
       scrollDirection: Axis.horizontal,
-      controller: controller,
+      controller: widget.controller,
       scrollBehavior: MouseDragScrollBehavior(),
       itemBuilder: (context, index) {
 
